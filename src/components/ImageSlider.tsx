@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface SliderData {
   images: string[]
@@ -12,32 +12,31 @@ const DEFAULT_SLIDERS: SliderData[] = [
   { images: ['https://images.unsplash.com/photo-1625869951429-800e5765c6c2?w=400&h=300&fit=crop', 'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=400&h=300&fit=crop'], text: 'Healthy Mix' },
 ]
 
-function MiniSlider({ images, text }: SliderData) {
-  const [current, setCurrent] = useState(0)
-  const next = useCallback(() => setCurrent(i => (i + 1) % images.length), [images.length])
-
-  useEffect(() => {
-    if (images.length <= 1) return
-    const timer = setInterval(next, 3000 + Math.random() * 1000)
-    return () => clearInterval(timer)
-  }, [next, images.length])
+function MiniSlider({ images, text, current, prev }: SliderData & { current: number; prev: number }) {
+  const len = images.length
+  if (len === 0) return <div className="relative rounded-xl overflow-hidden h-[120px] md:h-[160px] bg-gray-100" />
+  const idx = current % len
+  const prevIdx = prev % len
 
   return (
     <div className="relative rounded-xl overflow-hidden h-[120px] md:h-[160px]">
-      {images.map((src, i) => (
-        <img key={i} src={src} alt="" className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${i === current ? 'opacity-100' : 'opacity-0'}`} />
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      {images.map((src, i) => {
+        let cls = 'translate-x-full' // default: waiting on right
+        if (i === idx) cls = 'translate-x-0'
+        else if (i === prevIdx) cls = '-translate-x-full'
+        return (
+          <img
+            key={i}
+            src={src}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-in-out ${cls}`}
+          />
+        )
+      })}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
       {text && (
         <div className="absolute bottom-3 left-3 right-3">
           <p className="text-white font-bold text-xs md:text-sm drop-shadow-lg">{text}</p>
-        </div>
-      )}
-      {images.length > 1 && (
-        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-          {images.map((_, i) => (
-            <button key={i} onClick={() => setCurrent(i)} className={`w-1.5 h-1.5 rounded-full transition-all ${i === current ? 'bg-white w-4' : 'bg-white/50'}`} />
-          ))}
         </div>
       )}
     </div>
@@ -46,6 +45,8 @@ function MiniSlider({ images, text }: SliderData) {
 
 export default function ImageSlider() {
   const [sliders, setSliders] = useState<SliderData[]>(DEFAULT_SLIDERS)
+  const [current, setCurrent] = useState(0)
+  const prevRef = useRef(0)
 
   useEffect(() => {
     fetch('/api/settings/sliders').then(r => r.json()).then(d => {
@@ -53,10 +54,20 @@ export default function ImageSlider() {
     }).catch(() => {})
   }, [])
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(i => {
+        prevRef.current = i
+        return i + 1
+      })
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
       <div className="grid grid-cols-3 gap-3 md:gap-4">
-        {sliders.map((s, i) => <MiniSlider key={i} images={s.images} text={s.text} />)}
+        {sliders.map((s, i) => <MiniSlider key={i} images={s.images} text={s.text} current={current} prev={prevRef.current} />)}
       </div>
     </div>
   )
