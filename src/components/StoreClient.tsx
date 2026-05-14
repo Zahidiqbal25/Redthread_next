@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import CartSidebar from '@/components/CartSidebar'
 import ProductCard from '@/components/ProductCard'
 import Footer from '@/components/Footer'
+import ImageSlider from '@/components/ImageSlider'
 import AuthModal from '@/components/AuthModal'
 import CheckoutModal from '@/components/CheckoutModal'
 import OrdersModal from '@/components/OrdersModal'
@@ -108,17 +109,8 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
         </div>
       </section>
 
-      {/* Trust Bar */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="max-w-7xl mx-auto py-5 px-6 flex justify-center items-center gap-10 flex-wrap">
-          {[['10K+', 'Happy Customers'], ['50+', 'Premium Products'], ['24hr', 'Fast Delivery']].map(([num, label]) => (
-            <div key={label} className="text-center px-6">
-              <div className="text-2xl font-bold text-primary font-display">{num}</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wider mt-0.5">{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Image Slider */}
+      <ImageSlider />
 
       {/* Categories */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-8 md:pt-10 pb-5 flex gap-2 md:gap-2.5 flex-wrap justify-center">

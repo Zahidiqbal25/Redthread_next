@@ -11,8 +11,11 @@ export default function AdminClient() {
   const [orders, setOrders] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
-  const [banner, setBanner] = useState('')
   const [contact, setContact] = useState({ name: '', email: '', phone: '', address: '', pincode: '' })
+  const [sliders, setSliders] = useState<{images: string[], text: string}[]>([
+    { images: [], text: '' }, { images: [], text: '' }, { images: [], text: '' }
+  ])
+  const [sliderUploading, setSliderUploading] = useState(false)
   const [editProduct, setEditProduct] = useState<any>(null)
   const [showProductModal, setShowProductModal] = useState(false)
   const [imagePreview, setImagePreview] = useState('')
@@ -27,16 +30,17 @@ export default function AdminClient() {
   useEffect(() => { if (authed) loadAll() }, [authed])
 
   async function loadAll() {
-    const [s, p, o, c, u, b, ct] = await Promise.all([
+    const [s, p, o, c, u, ct, sl] = await Promise.all([
       fetch('/api/stats').then(r => r.json()),
       fetch('/api/products').then(r => r.json()),
       fetch('/api/orders').then(r => r.json()),
       fetch('/api/categories').then(r => r.json()),
       fetch('/api/users').then(r => r.json()),
-      fetch('/api/settings/banner').then(r => r.json()),
       fetch('/api/settings/contact').then(r => r.json()),
+      fetch('/api/settings/sliders').then(r => r.json()),
     ])
-    setStats(s); setProducts(p); setOrders(o); setCategories(c); setUsers(u); setBanner(b.banner || ''); setContact(ct)
+    setStats(s); setProducts(p); setOrders(o); setCategories(c); setUsers(u); setContact(ct)
+    if (sl.sliders?.length) setSliders(sl.sliders)
   }
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -92,14 +96,41 @@ export default function AdminClient() {
     setShowProductModal(false); setEditProduct(null); setImagePreview(''); loadAll()
   }
 
-  async function saveBanner() {
-    await fetch('/api/settings/banner', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ banner }) })
-    alert('Banner updated!')
-  }
 
   async function saveContact() {
     await fetch('/api/settings/contact', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(contact) })
     alert('Contact info updated!')
+  }
+
+  async function saveSliders() {
+    await fetch('/api/settings/sliders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sliders }) })
+    alert('Sliders updated!')
+  }
+
+  async function uploadSliderImage(sliderIdx: number, file: File) {
+    setSliderUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    const data = await res.json()
+    setSliderUploading(false)
+    if (data.url) {
+      const updated = [...sliders]
+      updated[sliderIdx] = { ...updated[sliderIdx], images: [...updated[sliderIdx].images, data.url] }
+      setSliders(updated)
+    }
+  }
+
+  function removeSliderImage(sliderIdx: number, imgIdx: number) {
+    const updated = [...sliders]
+    updated[sliderIdx] = { ...updated[sliderIdx], images: updated[sliderIdx].images.filter((_, i) => i !== imgIdx) }
+    setSliders(updated)
+  }
+
+  function updateSliderText(sliderIdx: number, text: string) {
+    const updated = [...sliders]
+    updated[sliderIdx] = { ...updated[sliderIdx], text }
+    setSliders(updated)
   }
 
   async function addCategory(e: React.FormEvent<HTMLFormElement>) {
@@ -292,7 +323,7 @@ export default function AdminClient() {
     )
   }
 
-  const nav = [['dashboard', '📊', 'Dashboard'], ['products', '📦', 'Products'], ['orders', '🧾', 'Orders'], ['categories', '🏷️', 'Categories'], ['users', '👥', 'Users']]
+  const nav = [['dashboard', '📊', 'Dashboard'], ['sliders', '🖼️', 'Sliders'], ['products', '📦', 'Products'], ['orders', '🧾', 'Orders'], ['categories', '🏷️', 'Categories'], ['users', '👥', 'Users']]
 
   return (
     <div className="flex min-h-screen">
@@ -329,11 +360,6 @@ export default function AdminClient() {
                 <div key={label as string} className="bg-white p-6 rounded-xl shadow-sm"><span className="text-2xl">{icon}</span><div className="text-2xl font-bold text-primary mt-2">{val}</div><div className="text-sm text-gray-500">{label}</div></div>
               ))}
             </div>
-            {/* Banner */}
-            <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
-              <h2 className="font-semibold mb-3">📢 Store Banner</h2>
-              <div className="flex gap-3"><input value={banner} onChange={e => setBanner(e.target.value)} className="flex-1 px-4 py-2.5 border rounded-lg outline-none focus:border-primary" /><button onClick={saveBanner} className="btn-primary text-sm">Save</button></div>
-            </div>
             {/* Contact */}
             <div className="bg-white rounded-xl shadow-sm p-5">
               <h2 className="font-semibold mb-3">📞 Contact Info</h2>
@@ -346,6 +372,44 @@ export default function AdminClient() {
               </div>
               <button onClick={saveContact} className="btn-primary text-sm">Save Contact</button>
             </div>
+          </>
+        )}
+
+        {section === 'sliders' && (
+          <>
+            <h1 className="font-display text-2xl mb-6">Banner Sliders</h1>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+              {sliders.map((slider, idx) => (
+                <div key={idx} className="bg-white rounded-xl shadow-sm p-5">
+                  <h3 className="font-semibold text-sm mb-3">Slider {idx + 1}</h3>
+                  {/* Images */}
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    {slider.images.map((img, imgIdx) => (
+                      <div key={imgIdx} className="relative group">
+                        <img src={img} className="w-16 h-16 rounded-lg object-cover" />
+                        <button onClick={() => removeSliderImage(idx, imgIdx)} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center">×</button>
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    type="file" accept="image/*"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadSliderImage(idx, f) }}
+                    className="w-full text-xs mb-3 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer"
+                  />
+                  {/* Text */}
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Display Text</label>
+                  <input
+                    value={slider.text}
+                    onChange={e => updateSliderText(idx, e.target.value)}
+                    placeholder="Text shown on slider"
+                    className="w-full px-3 py-2 border rounded-lg outline-none focus:border-primary text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            <button onClick={saveSliders} disabled={sliderUploading} className="btn-primary text-sm disabled:opacity-50">
+              {sliderUploading ? 'Uploading...' : 'Save All Sliders'}
+            </button>
           </>
         )}
 

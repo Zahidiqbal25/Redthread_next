@@ -15,13 +15,8 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
-  const [banner, setBanner] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
   const cartCount = cart.reduce((s, i) => s + i.qty, 0)
-
-  useEffect(() => {
-    fetch('/api/settings/banner').then(r => r.json()).then(d => d.banner && setBanner(d.banner))
-  }, [])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false) }
@@ -31,11 +26,6 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
 
   return (
     <header className="bg-primary-dark text-white sticky top-0 z-[100] shadow-md">
-      {banner && (
-        <div className="bg-gradient-to-r from-green-700 via-primary to-primary-dark text-accent py-2 md:py-3 overflow-hidden whitespace-nowrap border-b-2 border-accent">
-          <span className="inline-block pl-[100%] animate-marquee font-bold tracking-wider uppercase text-xs md:text-sm">{banner}</span>
-        </div>
-      )}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3 md:gap-5">
         <Link href="/" className="shrink-0"><img src="/logo.png" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
 
