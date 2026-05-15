@@ -69,7 +69,7 @@ export default function AuthModal({ mode: initialMode, onClose, onSwitch }: { mo
   if (forgotStep) {
     return (
       <div className="modal-overlay open" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-        <div className="bg-white rounded-xl max-w-md w-full p-8 relative">
+        <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8 relative max-h-screen md:max-h-[90vh] overflow-y-auto">
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
           {forgotSent ? (
             <>
@@ -97,7 +97,7 @@ export default function AuthModal({ mode: initialMode, onClose, onSwitch }: { mo
   if (otpStep) {
     return (
       <div className="modal-overlay open" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-        <div className="bg-white rounded-xl max-w-md w-full p-8 relative">
+        <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8 relative max-h-screen md:max-h-[90vh] overflow-y-auto">
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
           <h2 className="font-display text-xl mb-2">📧 Verify Your Email</h2>
           <p className="text-sm text-gray-500 mb-5">A 6-digit code has been sent to <strong>{regData?.email}</strong></p>
@@ -113,7 +113,7 @@ export default function AuthModal({ mode: initialMode, onClose, onSwitch }: { mo
 
   return (
     <div className="modal-overlay open" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white rounded-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8 max-h-screen md:max-h-[90vh] overflow-y-auto relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
         {currentMode === 'login' ? (
           <>
@@ -132,13 +132,13 @@ export default function AuthModal({ mode: initialMode, onClose, onSwitch }: { mo
             <h2 className="font-display text-xl mb-5">📝 Create Account</h2>
             <form onSubmit={handleRegister} className="space-y-3">
               <div><label className="text-sm font-semibold text-gray-600 block mb-1">Full Name</label><input name="name" required className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label className="text-sm font-semibold text-gray-600 block mb-1">Email</label><input name="email" type="email" required className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
                 <div><label className="text-sm font-semibold text-gray-600 block mb-1">Phone</label><input name="phone" type="tel" required className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
               </div>
               <div><label className="text-sm font-semibold text-gray-600 block mb-1">Password</label><input name="password" type="password" required minLength={6} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
               <div><label className="text-sm font-semibold text-gray-600 block mb-1">Address (optional)</label><textarea name="address" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" /></div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label className="text-sm font-semibold text-gray-600 block mb-1">City</label><input name="city" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
                 <div><label className="text-sm font-semibold text-gray-600 block mb-1">Pincode</label><input name="pincode" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
               </div>

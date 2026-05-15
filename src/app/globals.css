@@ -34,5 +34,5 @@
 .toast.show { @apply translate-y-0 opacity-100; }
 
 /* Modal */
-.modal-overlay { @apply fixed inset-0 bg-black/60 z-[300] hidden items-center justify-center p-3 md:p-5; }
+.modal-overlay { @apply fixed inset-0 bg-black/60 z-[300] hidden items-center justify-center p-0 md:p-5; }
 .modal-overlay.open { @apply flex; }

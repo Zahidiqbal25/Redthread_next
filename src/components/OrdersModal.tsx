@@ -36,7 +36,7 @@ export default function OrdersModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-overlay open" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-2xl max-h-screen md:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-primary-dark to-primary text-white rounded-t-xl shrink-0">
           <h2 className="font-display text-lg">📦 My Orders</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">✕</button>
@@ -49,12 +49,12 @@ export default function OrdersModal({ onClose }: { onClose: () => void }) {
             <p className="text-center text-gray-400 py-10">No orders yet.</p>
           ) : orders.map(order => (
             <div key={order.id} className="border-2 rounded-xl overflow-hidden">
-              <div className="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3 bg-gray-50 border-b gap-2">
                 <div>
                   <span className="font-bold text-sm text-primary-dark">Order #{order.id}</span>
                   <span className="text-xs text-gray-400 ml-3">{new Date(order.created_at).toLocaleDateString()}</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold text-primary">₹{order.total?.toLocaleString()}</span>
                   <span className={`text-xs px-2 py-1 rounded-full font-semibold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' : order.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                     {order.status || 'Pending'}

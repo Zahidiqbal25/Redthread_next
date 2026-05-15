@@ -51,7 +51,7 @@ export default function ProfileModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-overlay open" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-lg max-h-screen md:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-primary-dark to-primary text-white rounded-t-xl shrink-0">
           <h2 className="font-display text-lg">⚙️ My Profile</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">✕</button>
@@ -62,12 +62,12 @@ export default function ProfileModal({ onClose }: { onClose: () => void }) {
           <form onSubmit={handleProfile} className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-wider text-primary border-b-2 pb-2">👤 Personal Info</p>
             <input name="name" required placeholder="Full Name" defaultValue={user?.name || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input name="phone" placeholder="Phone" defaultValue={user?.phone || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
               <input value={user?.email || ''} disabled className="w-full px-4 py-2.5 border-2 rounded-lg bg-gray-50 text-gray-400 cursor-not-allowed" />
             </div>
             <textarea name="address" placeholder="Address" defaultValue={user?.address || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input name="city" placeholder="City" defaultValue={user?.city || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
               <input name="pincode" placeholder="Pincode" defaultValue={user?.pincode || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
             </div>

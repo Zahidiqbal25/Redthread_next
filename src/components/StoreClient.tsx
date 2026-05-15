@@ -31,7 +31,7 @@ function ResetPasswordModal({ token, onClose }: { token: string; onClose: () => 
 
   return (
     <div className="modal-overlay open">
-      <div className="bg-white rounded-xl max-w-md w-full p-8">
+      <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8">
         {done ? (
           <>
             <h2 className="font-display text-xl mb-2">✅ Password Reset!</h2>

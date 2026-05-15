@@ -65,8 +65,8 @@ export default function ImageSlider() {
   }, [])
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {sliders.map((s, i) => <MiniSlider key={i} images={s.images} text={s.text} current={current} prev={prevRef.current} />)}
       </div>
     </div>

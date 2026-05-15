@@ -82,7 +82,7 @@ export default function CheckoutModal({ onClose }: { onClose: () => void }) {
   if (guestOtp) {
     return (
       <div className="modal-overlay open" onClick={onClose}>
-        <div className="bg-white rounded-xl max-w-md w-full p-8" onClick={e => e.stopPropagation()}>
+        <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8" onClick={e => e.stopPropagation()}>
           <h2 className="font-display text-xl mb-2">📧 Verify Email</h2>
           <p className="text-sm text-gray-500 mb-5">Enter the code sent to <strong>{pendingData?.customer.email}</strong></p>
           <form onSubmit={handleGuestVerify}>
