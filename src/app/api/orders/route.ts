@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
       "customerEmail": customer.email, "customerAddress": customer.address,
       "customerCity": customer.city, "customerPincode": customer.pincode,
       items, total, payment: payment || 'COD', "paymentId": paymentId || '',
-      created_at: new Date().toISOString(),
       status: 'Pending',
     }).select().single()
     if (error) throw error
