@@ -27,7 +27,7 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
   return (
     <header className="bg-primary-dark text-white sticky top-0 z-[100] shadow-md">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3 md:gap-5">
-        <Link href="/" className="shrink-0"><img src="/logo.png" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
+        <Link href="/" className="shrink-0"><img src="/logo.png?v=2" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
 
         {/* Desktop search */}
         <div className="flex-1 max-w-md relative hidden md:block">
@@ -43,8 +43,6 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
         <div className="flex items-center gap-1 md:gap-3">
           {/* Mobile search toggle */}
           <button onClick={() => setMobileSearchOpen(!mobileSearchOpen)} className="md:hidden text-sm px-2 py-2 rounded-lg hover:bg-white/10">🔍</button>
-
-          <Link href="/admin" className="text-sm px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 flex items-center gap-1">📊 <span className="hidden md:inline">Admin</span></Link>
 
           {!user ? (
             <>

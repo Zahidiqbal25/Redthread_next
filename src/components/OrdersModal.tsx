@@ -52,7 +52,7 @@ export default function OrdersModal({ onClose }: { onClose: () => void }) {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3 bg-gray-50 border-b gap-2">
                 <div>
                   <span className="font-bold text-sm text-primary-dark">Order #{order.id}</span>
-                  <span className="text-xs text-gray-400 ml-3">{new Date(order.created_at).toLocaleDateString()}</span>
+                  <span className="block sm:inline text-xs text-gray-500 sm:ml-3 mt-1 sm:mt-0">📅 {order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + new Date(order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold text-primary">₹{order.total?.toLocaleString()}</span>

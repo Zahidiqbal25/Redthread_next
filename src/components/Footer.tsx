@@ -12,7 +12,7 @@ export default function Footer() {
     <footer className="bg-primary-dark text-white/80 pt-10 md:pt-16 pb-6 px-4 md:px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 mb-10">
         <div>
-          <img src="/logo.png" alt="Logo" className="h-8 w-auto mix-blend-screen" />
+          <img src="/logo.png?v=2" alt="Logo" className="h-8 w-auto mix-blend-screen" />
           <p className="text-sm leading-relaxed">Your trusted source for premium quality dry fruits and nuts. Sourced directly from farms across California, Afghanistan, Iran, and Chile.</p>
           <div className="flex flex-wrap gap-2 mt-4">
             {['💳 Secure Payments', '🚚 Fast Delivery', '✅ Quality Assured'].map(b => (
@@ -25,7 +25,6 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li><a href="#products" className="hover:text-accent">🛒 Shop All</a></li>
             <li><a href="#why-us" className="hover:text-accent">✨ Why Red Thread</a></li>
-            <li><a href="/admin" className="hover:text-accent">📊 Admin Panel</a></li>
           </ul>
         </div>
         <div>

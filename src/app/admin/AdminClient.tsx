@@ -179,8 +179,8 @@ export default function AdminClient() {
       @media print{body{padding:20px}}
     </style></head><body>
       <div class="header">
-        <div><div class="brand">🧵 Red<span>Thread</span></div><div style="font-size:12px;color:#666;margin-top:4px">Premium Dry Fruits</div></div>
-        <div style="text-align:right"><div class="badge">INVOICE</div><div style="font-size:13px;margin-top:6px">#${o.id}</div><div style="font-size:11px;color:#666">${new Date(o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div></div>
+        <div><div class="brand"><img src="/logo.png?v=2" style="height:30px" /></div><div style="font-size:12px;color:#666;margin-top:4px">Premium Dry Fruits</div></div>
+        <div style="text-align:right"><div class="badge">INVOICE</div><div style="font-size:13px;margin-top:6px">#${o.id}</div><div style="font-size:11px;color:#666"><strong>Order Date:</strong> ${o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
         <div><h3>Bill To</h3><div style="font-size:13px;line-height:1.8"><strong>${o.customerName}</strong><br/>${o.customerPhone}<br/>${o.customerEmail || ''}</div></div>
@@ -219,13 +219,13 @@ export default function AdminClient() {
       @media print{body{margin:0}.label{border:2px dashed #333;margin:0}}
     </style></head><body>
       <div class="label">
-        <div class="brand">🧵 Red<span>Thread</span></div>
+        <div class="brand"><img src="/logo.png?v=2" style="height:24px" /></div>
         <div class="order-id">#${o.id}</div>
         <div class="section"><label>Deliver To</label><p>${o.customerName}</p><p>${o.customerPhone}</p></div>
         <div class="section"><label>Address</label><p>${o.customerAddress || '—'}</p><p>${o.customerCity || ''} — ${o.customerPincode || ''}</p></div>
         <hr class="divider"/>
         <div class="section"><label>Payment</label><p>${o.payment}</p></div>
-        <div class="section"><label>Order Date</label><p>${new Date(o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p></div>
+        <div class="section"><label>Order Date</label><p>${o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p></div>
         <hr class="divider"/>
         <div class="from">From: Red Thread &nbsp;|&nbsp; ${contact.address || ''} &nbsp;|&nbsp; ${contact.phone || ''}</div>
       </div>
@@ -278,7 +278,7 @@ export default function AdminClient() {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark to-primary">
           <div className="bg-white p-10 rounded-xl w-full max-w-sm shadow-2xl text-center">
-            <h1 className="font-display text-2xl text-primary mb-2"><img src="/logo.png" alt="Logo" className="h-10 mx-auto mix-blend-multiply" /></h1>
+            <h1 className="font-display text-2xl text-primary mb-2"><img src="/logo.png?v=2" alt="Logo" className="h-10 mx-auto mix-blend-multiply" /></h1>
             <p className="text-gray-500 text-sm mb-6">Reset Admin Password</p>
             {fpStep === 'email' && (
               <form onSubmit={handleFpSendOtp}>
@@ -311,7 +311,7 @@ export default function AdminClient() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark to-primary">
         <div className="bg-white p-10 rounded-xl w-full max-w-sm shadow-2xl text-center">
-          <h1 className="font-display text-2xl text-primary mb-2"><img src="/logo.png" alt="Logo" className="h-10 mx-auto mix-blend-multiply" /></h1>
+          <h1 className="font-display text-2xl text-primary mb-2"><img src="/logo.png?v=2" alt="Logo" className="h-10 mx-auto mix-blend-multiply" /></h1>
           <p className="text-gray-500 text-sm mb-6">Admin Panel Login</p>
           <form onSubmit={handleLogin}>
             <input name="password" type="password" placeholder="Enter admin password" required className="w-full px-4 py-3 border-2 rounded-lg mb-4 outline-none focus:border-primary" />
@@ -332,7 +332,7 @@ export default function AdminClient() {
 
       {/* Sidebar */}
       <aside className={`w-60 bg-primary-dark text-white py-5 fixed h-screen overflow-y-auto z-[100] transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="px-5 pb-5 border-b border-white/10 flex justify-between items-center"><img src="/logo.png" alt="Logo" className="h-8 w-auto mix-blend-screen" /><button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/70 hover:text-white">✕</button></div>
+        <div className="px-5 pb-5 border-b border-white/10 flex justify-between items-center"><img src="/logo.png?v=2" alt="Logo" className="h-8 w-auto mix-blend-screen" /><button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/70 hover:text-white">✕</button></div>
         <nav className="mt-5 space-y-1">
           {nav.map(([key, icon, label]) => (
             <button key={key} onClick={() => { setSection(key); setSidebarOpen(false) }} className={`w-full text-left flex items-center gap-3 px-6 py-3 text-sm transition-colors ${section === key ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}>
