@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonError, jsonOk } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const { data } = await supabase.from('orders').select('*').order('id', { ascending: false })
   return jsonOk(data || [])
@@ -14,12 +16,13 @@ export async function POST(req: NextRequest) {
       return jsonError('customer, items, total are required')
 
     const { data: order, error } = await supabase.from('orders').insert({
-      userId: userId || 0,
-      customerName: customer.name, customerPhone: customer.phone,
-      customerEmail: customer.email, customerAddress: customer.address,
-      customerCity: customer.city, customerPincode: customer.pincode,
-      items, total, payment: payment || 'COD', paymentId: paymentId || '',
+      "userId": userId || 0,
+      "customerName": customer.name, "customerPhone": customer.phone,
+      "customerEmail": customer.email, "customerAddress": customer.address,
+      "customerCity": customer.city, "customerPincode": customer.pincode,
+      items, total, payment: payment || 'COD', "paymentId": paymentId || '',
       created_at: new Date().toISOString(),
+      status: 'Pending',
     }).select().single()
     if (error) throw error
 

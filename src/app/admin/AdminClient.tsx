@@ -39,7 +39,7 @@ export default function AdminClient() {
       fetch('/api/settings/contact').then(r => r.json()),
       fetch('/api/settings/sliders').then(r => r.json()),
     ])
-    setStats(s); setProducts(p); setOrders(o); setCategories(c); setUsers(u); setContact(ct)
+    setStats(s); setProducts(p); setOrders(Array.isArray(o) ? o.sort((a: any, b: any) => b.id - a.id) : []); setCategories(c); setUsers(u); setContact(ct)
     if (sl.sliders?.length) setSliders(sl.sliders)
   }
 
@@ -447,11 +447,12 @@ export default function AdminClient() {
             <h1 className="font-display text-2xl mb-6">Orders ({orders.length})</h1>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
               <table className="w-full text-sm min-w-[700px]">
-                <thead><tr className="bg-gray-50 text-left text-xs uppercase text-gray-500"><th className="p-3">#</th><th className="p-3">Customer</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Payment</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+                <thead><tr className="bg-gray-50 text-left text-xs uppercase text-gray-500"><th className="p-3">#</th><th className="p-3">Date</th><th className="p-3">Customer</th><th className="p-3">Items</th><th className="p-3">Total</th><th className="p-3">Payment</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
                 <tbody>
                   {orders.map(o => (
                     <tr key={o.id} className="border-t hover:bg-gray-50">
                       <td className="p-3">#{o.id}</td>
+                      <td className="p-3 text-xs text-gray-500 whitespace-nowrap">{(o.created_at || o.date) ? new Date(o.created_at || o.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + '\n' + new Date(o.created_at || o.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                       <td className="p-3"><div className="font-semibold">{o.customerName}</div><div className="text-xs text-gray-400">{o.customerPhone}</div></td>
                       <td className="p-3 text-xs">{(Array.isArray(o.items) ? o.items : []).map((i: any) => `${i.name} ×${i.qty}`).join(', ')}</td>
                       <td className="p-3 font-bold">₹{o.total?.toLocaleString()}</td>

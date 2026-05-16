@@ -9,11 +9,16 @@ export default function OrdersModal({ onClose }: { onClose: () => void }) {
   const [cancelling, setCancelling] = useState<number | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) { setLoading(false); return }
     function fetchOrders() {
-      fetch(`/api/users/${user!.id}/orders`, { cache: 'no-store' })
+      fetch(`/api/users/${user!.id}/orders`)
         .then(r => r.json())
-        .then(data => { setOrders(data); setLoading(false) })
+        .then(data => { 
+          if (Array.isArray(data)) setOrders(data)
+          else setOrders([])
+          setLoading(false) 
+        })
+        .catch(() => { setOrders([]); setLoading(false) })
     }
     fetchOrders()
     const interval = setInterval(fetchOrders, 10000)
@@ -44,7 +49,9 @@ export default function OrdersModal({ onClose }: { onClose: () => void }) {
 
         <div className="overflow-y-auto flex-1 p-5 space-y-4">
           {loading ? (
-            <p className="text-center text-gray-400 py-10">Loading...</p>
+            <p className="text-center text-gray-400 py-10">Loading orders...</p>
+          ) : !user ? (
+            <p className="text-center text-gray-400 py-10">Please log in to view your orders.</p>
           ) : orders.length === 0 ? (
             <p className="text-center text-gray-400 py-10">No orders yet.</p>
           ) : orders.map(order => (
@@ -52,7 +59,7 @@ export default function OrdersModal({ onClose }: { onClose: () => void }) {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3 bg-gray-50 border-b gap-2">
                 <div>
                   <span className="font-bold text-sm text-primary-dark">Order #{order.id}</span>
-                  <span className="block sm:inline text-xs text-gray-500 sm:ml-3 mt-1 sm:mt-0">📅 {order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + new Date(order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                  <span className="block sm:inline text-xs text-gray-500 sm:ml-3 mt-1 sm:mt-0">📅 {(order.created_at || order.date) ? new Date(order.created_at || order.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + new Date(order.created_at || order.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold text-primary">₹{order.total?.toLocaleString()}</span>
