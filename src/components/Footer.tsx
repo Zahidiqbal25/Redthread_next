@@ -24,7 +24,7 @@ export default function Footer() {
           <h3 className="font-display text-white text-lg mb-4">Quick Links</h3>
           <ul className="space-y-2 text-sm">
             <li><a href="#products" className="hover:text-accent">🛒 Shop All</a></li>
-            <li><a href="#why-us" className="hover:text-accent">✨ Why Red Thread</a></li>
+            <li><a href="#why-us" className="hover:text-accent">✨ Why Valenuts</a></li>
           </ul>
         </div>
         <div>
@@ -52,7 +52,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto pt-5 border-t border-white/10 text-center text-xs text-white/50">
-        © 2024 Red Thread. All rights reserved. Made with ❤️ for nut lovers.
+        © 2024 Valenuts. All rights reserved. Made with ❤️ for nut lovers.
       </div>
     </footer>
   )

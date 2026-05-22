@@ -195,7 +195,7 @@ export default function AdminClient() {
         <tr class="total-row"><td colspan="4" style="text-align:right;padding:10px">Total</td><td style="padding:10px;color:#2d5016">₹${o.total?.toLocaleString()}</td></tr>
       </tfoot></table>
       <div style="margin-top:16px;font-size:12px"><strong>Payment:</strong> ${o.payment} &nbsp;|&nbsp; <strong>Status:</strong> ${o.status || 'Pending'}</div>
-      <div class="footer">Thank you for shopping with Red Thread! 🧵 &nbsp;|&nbsp; For support contact us at ${contact.email || ''}</div>
+      <div class="footer">Thank you for shopping with Valenuts! 🌰 &nbsp;|&nbsp; For support contact us at ${contact.email || ''}</div>
     </body></html>`)
     win.document.close()
     win.focus()
@@ -227,7 +227,7 @@ export default function AdminClient() {
         <div class="section"><label>Payment</label><p>${o.payment}</p></div>
         <div class="section"><label>Order Date</label><p>${o.created_at ? new Date(o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p></div>
         <hr class="divider"/>
-        <div class="from">From: Red Thread &nbsp;|&nbsp; ${contact.address || ''} &nbsp;|&nbsp; ${contact.phone || ''}</div>
+        <div class="from">From: Valenuts &nbsp;|&nbsp; ${contact.address || ''} &nbsp;|&nbsp; ${contact.phone || ''}</div>
       </div>
     </body></html>`)
     win.document.close()

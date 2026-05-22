@@ -92,20 +92,12 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       <CartSidebar onCheckout={() => setCheckoutOpen(true)} />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-primary-dark via-primary to-primary-light text-white py-12 md:py-20 px-4 md:px-6 text-center relative overflow-hidden">
-        <div className="relative z-10">
-          <span className="inline-block bg-accent/20 border border-accent/50 text-accent px-3 md:px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 md:mb-5">🌿 100% Natural & Premium</span>
-          <h1 className="font-display text-3xl md:text-4xl lg:text-6xl font-bold mb-4 md:mb-5">Nature&apos;s Finest <span className="text-accent">Dry Fruits</span></h1>
-          <p className="text-base md:text-lg opacity-90 max-w-xl mx-auto mb-6 md:mb-8">Handpicked premium quality dry fruits sourced directly from the world&apos;s best farms.</p>
-          <div className="flex gap-3 md:gap-4 justify-center flex-wrap mb-8 md:mb-12">
-            <a href="#products" className="bg-accent text-primary-dark px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold shadow-lg hover:-translate-y-1 transition-transform text-sm md:text-base">Shop Now →</a>
-            <a href="#why-us" className="border-2 border-white/50 px-6 md:px-8 py-3 md:py-3.5 rounded-full font-semibold hover:bg-white/10 transition-colors text-sm md:text-base">Why Red Thread?</a>
-          </div>
-          <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
-            {['🌿 100% Natural', '✅ Quality Tested', '🚚 Free Delivery', '↩️ Easy Returns'].map(f => (
-              <span key={f} className="text-xs md:text-sm bg-white/10 border border-white/15 px-3 md:px-4 py-1.5 md:py-2 rounded-full">{f}</span>
-            ))}
-          </div>
+      <section className="relative h-[220px] md:h-[320px] lg:h-[400px] overflow-hidden">
+        <img src="/hero-banner.jpg" alt="Valenuts" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 flex items-center justify-center gap-4 md:gap-6">
+          <a href="#products" className="bg-accent text-primary-dark px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold shadow-lg hover:-translate-y-1 transition-transform text-sm md:text-base">Shop Now →</a>
+          <a href="#why-us" className="border-2 border-white px-6 md:px-8 py-3 md:py-3.5 rounded-full font-semibold text-white hover:bg-white/10 transition-colors text-sm md:text-base">Why Valenuts?</a>
         </div>
       </section>
 
@@ -137,7 +129,7 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
 
       {/* Why Choose Us */}
       <section id="why-us" className="bg-gradient-to-br from-primary-dark to-primary py-12 md:py-16 px-4 md:px-6">
-        <h2 className="font-display text-2xl md:text-3xl text-center text-white mb-2">Why Choose Red Thread?</h2>
+        <h2 className="font-display text-2xl md:text-3xl text-center text-white mb-2">Why Choose Valenuts?</h2>
         <p className="text-center text-white/70 mb-8 md:mb-10 text-sm md:text-base">We go the extra mile to bring you the best</p>
         <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {[

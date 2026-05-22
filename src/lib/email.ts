@@ -5,13 +5,13 @@ const transporter = nodemailer.createTransport({
   auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
 })
 
-const from = `"Red Thread 🧵" <${process.env.EMAIL_USER}>`
-const logo = `<div style="background:linear-gradient(135deg,#1a3009,#2d5016,#4a7c28);padding:32px 24px;text-align:center"><h1 style="color:#d4a843;font-size:1.8rem;margin:0">🧵 Red Thread</h1></div>`
+const from = `"Valenuts 🌰" <${process.env.EMAIL_USER}>`
+const logo = `<div style="background:linear-gradient(135deg,#1a3009,#2d5016,#4a7c28);padding:32px 24px;text-align:center"><h1 style="color:#d4a843;font-size:1.8rem;margin:0">🌰 Valenuts</h1></div>`
 
 export async function sendVerificationEmail(email: string, code: string) {
   await transporter.sendMail({
     from, to: email,
-    subject: 'Your Red Thread Verification Code',
+    subject: 'Your Valenuts Verification Code',
     html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#faf8f5;border-radius:12px;overflow:hidden">
       ${logo}
       <div style="padding:32px 24px;text-align:center">
@@ -26,7 +26,7 @@ export async function sendVerificationEmail(email: string, code: string) {
 export async function sendWelcomeEmail(user: { name: string; email: string; phone: string }) {
   await transporter.sendMail({
     from, to: user.email,
-    subject: 'Welcome to Red Thread! 🌰',
+    subject: 'Welcome to Valenuts! 🌰',
     html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#faf8f5;border-radius:12px;overflow:hidden">
       ${logo}
       <div style="padding:32px 24px">
@@ -42,7 +42,7 @@ export async function sendPasswordResetEmail(user: { name: string; email: string
   const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}?reset_token=${token}`
   await transporter.sendMail({
     from, to: user.email,
-    subject: 'Reset Your Red Thread Password',
+    subject: 'Reset Your Valenuts Password',
     html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#faf8f5;border-radius:12px;overflow:hidden">
       ${logo}
       <div style="padding:32px 24px">
@@ -58,7 +58,7 @@ export async function sendOrderCancellationEmail(order: any) {
   const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items)
   await transporter.sendMail({
     from, to: order.customerEmail,
-    subject: `Order #${order.id} Cancelled - Red Thread`,
+    subject: `Order #${order.id} Cancelled - Valenuts`,
     html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#faf8f5;border-radius:12px;overflow:hidden">
       ${logo}
       <div style="padding:32px 24px">

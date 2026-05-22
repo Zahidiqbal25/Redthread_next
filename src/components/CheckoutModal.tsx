@@ -44,24 +44,47 @@ export default function CheckoutModal({ onClose }: { onClose: () => void }) {
 
   async function placeOrder(customer: any, payMethod: string) {
     if (payMethod === 'Razorpay') {
+      if (!(window as any).Razorpay) {
+        showToast('❌ Payment gateway is loading. Please try again.')
+        setLoading(false)
+        return
+      }
       try {
         const rzpOrder = await fetch('/api/payments/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: total }) }).then(r => r.json())
         if (rzpOrder.error) throw new Error(rzpOrder.error)
 
+        const cartSnapshot = [...cart]
         const options = {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
           amount: rzpOrder.amount, currency: rzpOrder.currency,
-          name: 'Red Thread 🧵', order_id: rzpOrder.id,
+          name: 'Valenuts', order_id: rzpOrder.id,
           prefill: { name: customer.name, email: customer.email, contact: customer.phone },
           theme: { color: '#2d5016' },
           handler: async (response: any) => {
-            const verify = await fetch('/api/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(response) }).then(r => r.json())
-            if (verify.verified) await finalizeOrder(customer, 'Razorpay', response.razorpay_payment_id)
-            else showToast('❌ Payment verification failed')
+            try {
+              const verify = await fetch('/api/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(response) }).then(r => r.json())
+              if (verify.verified) {
+                const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id || 0, customer, items: cartSnapshot, total, payment: 'Razorpay', paymentId: response.razorpay_payment_id }) })
+                const order = await res.json()
+                if (res.ok) {
+                  clearCart()
+                  onClose()
+                  showToast(`🎉 Order placed successfully! Order #${order.id}`)
+                } else {
+                  showToast('❌ Order failed: ' + (order.error || 'Unknown error'))
+                }
+              } else {
+                showToast('❌ Payment verification failed')
+              }
+            } catch (err: any) {
+              showToast('❌ Error processing payment: ' + err.message)
+            }
+            setLoading(false)
           },
-          modal: { ondismiss: () => { setLoading(false); showToast('Payment cancelled.') } },
+          modal: { ondismiss: () => { setLoading(false) } },
         }
         const rzp = new (window as any).Razorpay(options)
+        rzp.on('payment.failed', () => { showToast('❌ Payment failed. Please try again.'); setLoading(false) })
         rzp.open()
         return
       } catch (err: any) { showToast('❌ ' + err.message); setLoading(false); return }
