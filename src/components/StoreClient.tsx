@@ -92,12 +92,37 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       <CartSidebar onCheckout={() => setCheckoutOpen(true)} />
 
       {/* Hero */}
-      <section className="relative h-[220px] md:h-[320px] lg:h-[400px] overflow-hidden">
-        <img src="/hero-banner.jpg" alt="Valenuts" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="absolute inset-0 flex items-center justify-center gap-4 md:gap-6">
-          <a href="#products" className="bg-accent text-primary-dark px-6 md:px-8 py-3 md:py-3.5 rounded-full font-bold shadow-lg hover:-translate-y-1 transition-transform text-sm md:text-base">Shop Now →</a>
-          <a href="#why-us" className="border-2 border-white px-6 md:px-8 py-3 md:py-3.5 rounded-full font-semibold text-white hover:bg-white/10 transition-colors text-sm md:text-base">Why Valenuts?</a>
+      <section className="relative overflow-hidden bg-[#0f1f06] flex items-center justify-center py-16 md:py-24 lg:py-32 px-4 text-center">
+        {/* Background radial glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,#2d5016_0%,#0f1f06_100%)]" />
+        {/* Decorative rings */}
+        <div className="absolute w-[500px] h-[500px] md:w-[800px] md:h-[800px] rounded-full border border-white/5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute w-[350px] h-[350px] md:w-[580px] md:h-[580px] rounded-full border border-white/5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        {/* Accent blobs */}
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-primary-light/20 rounded-full blur-3xl" />
+
+        <div className="relative max-w-3xl">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="text-accent/90 text-xs font-semibold tracking-widest uppercase">Premium Quality Since Day One</span>
+          </div>
+          {/* Brand name */}
+          <h1 className="font-display text-6xl md:text-8xl lg:text-9xl font-bold leading-none mb-2" style={{ background: 'linear-gradient(135deg, #d4a843 0%, #f0d68a 50%, #d4a843 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VALENUTS</h1>
+          <p className="text-white/40 font-semibold tracking-[0.5em] text-sm md:text-base uppercase mb-6">— DRYFRUIT —</p>
+          {/* Divider */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-accent/50" />
+            <span className="text-accent text-lg">✦</span>
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-accent/50" />
+          </div>
+          <p className="text-white/75 text-base md:text-lg font-light mb-2 tracking-wide">Premium Dry Fruits, Pure Taste, Healthy Life</p>
+          <p className="text-white/40 text-xs md:text-sm mb-10">Handpicked Quality Dry Fruits from Nature to Your Doorstep</p>
+          <div className="flex items-center justify-center gap-4 md:gap-5">
+            <a href="#products" className="group relative bg-accent text-primary-dark px-7 md:px-9 py-3 md:py-3.5 rounded-full font-bold shadow-[0_0_24px_rgba(212,168,67,0.4)] hover:shadow-[0_0_36px_rgba(212,168,67,0.6)] hover:-translate-y-1 transition-all text-sm md:text-base">Shop Now →</a>
+            <a href="#why-us" className="border border-white/30 bg-white/5 backdrop-blur-sm px-7 md:px-9 py-3 md:py-3.5 rounded-full font-semibold text-white/80 hover:bg-white/10 hover:border-white/50 transition-all text-sm md:text-base">Why Valenuts?</a>
+          </div>
         </div>
       </section>
 
