@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react'
 
 export default function Footer() {
   const [contact, setContact] = useState({ name: '', email: 'hello@nutrinuts.com', phone: '+91 98765 43210', address: 'Mumbai, India', pincode: '' })
+  const [categories, setCategories] = useState<any[]>([])
 
   useEffect(() => {
     fetch('/api/settings/contact').then(r => r.json()).then(setContact).catch(() => {})
+    fetch('/api/categories').then(r => r.json()).then(data => { if (Array.isArray(data)) setCategories(data) }).catch(() => {})
   }, [])
 
   return (
@@ -13,7 +15,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 mb-10">
         <div>
           <img src="/logo.png?v=2" alt="Logo" className="h-8 w-auto mix-blend-screen" />
-          <p className="text-sm leading-relaxed">Your trusted source for premium quality dry fruits and nuts. Sourced directly from farms across California, Afghanistan, Iran, and Chile.</p>
+          <p className="text-sm leading-relaxed">Taste the essence of Kashmir with naturally sourced premium dry fruits crafted for health and wellness.</p>
           <div className="flex flex-wrap gap-2 mt-4">
             {['💳 Secure Payments', '🚚 Fast Delivery', '✅ Quality Assured'].map(b => (
               <span key={b} className="text-xs bg-white/10 border border-white/15 px-2.5 py-1 rounded-full">{b}</span>
@@ -30,8 +32,8 @@ export default function Footer() {
         <div>
           <h3 className="font-display text-white text-lg mb-4">Categories</h3>
           <ul className="space-y-2 text-sm">
-            {['🌰 Almonds', '🥜 Cashews', '💚 Pistachios', '🧠 Walnuts', '🍇 Raisins'].map(c => (
-              <li key={c}><a href="#products" className="hover:text-accent">{c}</a></li>
+            {categories.map(c => (
+              <li key={c.id}><a href="#products" className="hover:text-accent">{c.emoji ? `${c.emoji} ` : ''}{c.name}</a></li>
             ))}
           </ul>
         </div>

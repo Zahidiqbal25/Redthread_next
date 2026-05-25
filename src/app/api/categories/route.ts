@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonError, jsonOk } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const { data } = await supabase.from('categories').select('*').order('id')
   return jsonOk(data || [])
