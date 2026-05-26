@@ -172,7 +172,7 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
         </div>
       </section>
 
-      <Footer />
+      <Footer onCategoryClick={setCategory} />
 
       {/* Modals */}
       {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onSwitch={setAuthMode} />}

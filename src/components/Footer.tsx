@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-export default function Footer() {
+export default function Footer({ onCategoryClick }: { onCategoryClick?: (name: string) => void }) {
   const [contact, setContact] = useState({ name: '', email: 'hello@nutrinuts.com', phone: '+91 98765 43210', address: 'Mumbai, India', pincode: '' })
   const [categories, setCategories] = useState<any[]>([])
 
@@ -33,7 +33,7 @@ export default function Footer() {
           <h3 className="font-display text-white text-lg mb-4">Categories</h3>
           <ul className="space-y-2 text-sm">
             {categories.map(c => (
-              <li key={c.id}><a href="#products" className="hover:text-accent">{c.emoji ? `${c.emoji} ` : ''}{c.name}</a></li>
+              <li key={c.id}><a href="#products" onClick={() => onCategoryClick?.(c.name)} className="hover:text-accent cursor-pointer">{c.emoji ? `${c.emoji} ` : ''}{c.name}</a></li>
             ))}
           </ul>
         </div>
