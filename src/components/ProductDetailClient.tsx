@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { StoreProvider, useStore } from '@/lib/store-context'
 import ProductCard from '@/components/ProductCard'
 import CartSidebar from '@/components/CartSidebar'
+import CheckoutModal from '@/components/CheckoutModal'
 
 function ProductDetail({ product, relatedProducts }: { product: any; relatedProducts: any[] }) {
   const { addToCart, showToast } = useStore()
   const [qty, setQty] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
 
   const discount = Math.round((1 - product.price / product.originalPrice) * 100)
   const outOfStock = !product.inStock
@@ -33,7 +35,8 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
 
   return (
     <>
-      <CartSidebar onCheckout={() => {}} />
+      <CartSidebar onCheckout={() => setCheckoutOpen(true)} />
+      {checkoutOpen && <CheckoutModal onClose={() => setCheckoutOpen(false)} />}
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
