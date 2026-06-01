@@ -10,11 +10,11 @@ export default function TrackOrderModal({ onClose }: { onClose: () => void }) {
   async function handleTrack(e: React.FormEvent) {
     e.preventDefault()
     setError(''); setLoading(true)
-    const res = await fetch(`/api/orders/track/${phone.trim()}`, { cache: 'no-store' })
+    const res = await fetch(`/api/orders/track/${encodeURIComponent(phone.trim())}`)
     const data = await res.json()
     setLoading(false)
     if (!res.ok) { setError(data.error); return }
-    if (!data.length) { setError('No orders found for this phone number.'); return }
+    if (!data.length) { setError('No orders found. Try your phone number or email.'); return }
     setOrders(data)
   }
 
@@ -35,8 +35,8 @@ export default function TrackOrderModal({ onClose }: { onClose: () => void }) {
         <div className="p-6 overflow-y-auto flex-1">
           <form onSubmit={handleTrack} className="flex flex-col sm:flex-row gap-3 mb-6">
             <input
-              type="tel" required value={phone} onChange={e => { setPhone(e.target.value); setOrders(null); setError('') }}
-              placeholder="Enter your registered phone number"
+              type="text" required value={phone} onChange={e => { setPhone(e.target.value); setOrders(null); setError('') }}
+              placeholder="Enter your phone number or email"
               className="flex-1 px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary text-sm"
             />
             <button type="submit" disabled={loading} className="btn-primary text-sm px-5">

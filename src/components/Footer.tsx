@@ -6,7 +6,7 @@ export default function Footer({ onCategoryClick }: { onCategoryClick?: (name: s
   const [categories, setCategories] = useState<any[]>([])
 
   useEffect(() => {
-    fetch('/api/settings/contact').then(r => r.json()).then(setContact).catch(() => {})
+    fetch('/api/settings/contact?t=' + Date.now()).then(r => r.json()).then(setContact).catch(() => {})
     fetch('/api/categories').then(r => r.json()).then(data => { if (Array.isArray(data)) setCategories(data) }).catch(() => {})
   }, [])
 

@@ -37,7 +37,7 @@ export default function AdminClient() {
       fetch('/api/orders').then(r => r.json()),
       fetch('/api/categories').then(r => r.json()),
       fetch('/api/users').then(r => r.json()),
-      fetch('/api/settings/contact').then(r => r.json()),
+      fetch('/api/settings/contact?t=' + Date.now()).then(r => r.json()),
       fetch('/api/settings/sliders').then(r => r.json()),
     ])
     setStats(s); setProducts(p); setOrders(Array.isArray(o) ? o.sort((a: any, b: any) => b.id - a.id) : []); setCategories(c); setUsers(u); setContact(ct)
@@ -100,8 +100,9 @@ export default function AdminClient() {
 
 
   async function saveContact() {
-    await fetch('/api/settings/contact', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(contact) })
-    alert('Contact info updated!')
+    const res = await fetch('/api/settings/contact', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(contact) })
+    if (res.ok) { alert('Contact info updated!'); loadAll() }
+    else { const d = await res.json(); alert('Failed: ' + (d.error || 'Unknown error')) }
   }
 
   async function saveSliders() {

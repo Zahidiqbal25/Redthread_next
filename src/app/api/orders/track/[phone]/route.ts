@@ -3,8 +3,16 @@ import { supabase } from '@/lib/supabase'
 import { jsonError, jsonOk } from '@/lib/utils'
 
 export async function GET(_: NextRequest, { params }: { params: { phone: string } }) {
-  const phone = params.phone.trim()
-  if (!phone) return jsonError('Phone number is required')
-  const { data } = await supabase.from('orders').select('*').eq('customerPhone', phone).order('id', { ascending: false })
-  return jsonOk(data || [])
+  const query = params.phone.trim()
+  if (!query) return jsonError('Phone number or email is required')
+
+  // Search by phone
+  const { data: byPhone } = await supabase.from('orders').select('*').eq('customerPhone', query).order('id', { ascending: false })
+  if (byPhone && byPhone.length > 0) return jsonOk(byPhone)
+
+  // Search by email
+  const { data: byEmail } = await supabase.from('orders').select('*').eq('customerEmail', query).order('id', { ascending: false })
+  if (byEmail && byEmail.length > 0) return jsonOk(byEmail)
+
+  return jsonOk([])
 }
