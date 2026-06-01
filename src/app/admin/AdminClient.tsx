@@ -19,6 +19,7 @@ export default function AdminClient() {
   const [editProduct, setEditProduct] = useState<any>(null)
   const [showProductModal, setShowProductModal] = useState(false)
   const [imagePreview, setImagePreview] = useState('')
+  const [productImages, setProductImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editCategory, setEditCategory] = useState<any>(null)
@@ -81,19 +82,20 @@ export default function AdminClient() {
   async function saveProduct(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
-    const fileInput = (e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement)
+    const fileInput = (e.currentTarget.querySelector('#mainImage') as HTMLInputElement)
     let image = imagePreview || editProduct?.image || ''
 
     if (fileInput?.files?.[0]) {
       image = await uploadImage(fileInput.files[0])
     }
 
-    const body = { name: fd.get('name'), category: fd.get('category'), price: Number(fd.get('price')), originalPrice: Number(fd.get('originalPrice')), weight: fd.get('weight'), description: fd.get('description'), rating: Number(fd.get('rating')) || 4.5, quantity: Number(fd.get('quantity')) || 0, image, inStock: Number(fd.get('quantity')) > 0 }
+    const images = productImages.length > 0 ? productImages : (editProduct?.images || [])
+    const body = { name: fd.get('name'), category: fd.get('category'), price: Number(fd.get('price')), originalPrice: Number(fd.get('originalPrice')), weight: fd.get('weight'), description: fd.get('description'), rating: Number(fd.get('rating')) || 4.5, quantity: Number(fd.get('quantity')) || 0, image, images, inStock: Number(fd.get('quantity')) > 0 }
 
     if (editProduct) await fetch(`/api/products/${editProduct.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     else await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-    setShowProductModal(false); setEditProduct(null); setImagePreview(''); loadAll()
+    setShowProductModal(false); setEditProduct(null); setImagePreview(''); setProductImages([]); loadAll()
   }
 
 
@@ -417,7 +419,7 @@ export default function AdminClient() {
           <>
             <div className="flex justify-between items-center mb-6">
               <h1 className="font-display text-2xl">Products</h1>
-              <button onClick={() => { setEditProduct(null); setImagePreview(''); setShowProductModal(true) }} className="btn-primary text-sm">+ Add Product</button>
+              <button onClick={() => { setEditProduct(null); setImagePreview(''); setProductImages([]); setShowProductModal(true) }} className="btn-primary text-sm">+ Add Product</button>
             </div>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
               <table className="w-full text-sm min-w-[600px]">
@@ -431,7 +433,7 @@ export default function AdminClient() {
                       <td className="p-3">₹{p.price} <span className="text-gray-400 line-through text-xs">₹{p.originalPrice}</span></td>
                       <td className="p-3"><span className={p.quantity > 0 ? 'text-primary font-bold' : 'text-red-500 font-bold'}>{p.quantity ?? 0}</span></td>
                       <td className="p-3 flex gap-2">
-                        <button onClick={() => { setEditProduct(p); setImagePreview(''); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
+                        <button onClick={() => { setEditProduct(p); setImagePreview(''); setProductImages(p.images || []); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
                         <button onClick={() => deleteProduct(p.id)} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-red-100 hover:text-red-600">🗑</button>
                       </td>
                     </tr>
@@ -559,9 +561,36 @@ export default function AdminClient() {
                   <input name="originalPrice" type="number" required placeholder="Original Price" defaultValue={editProduct?.originalPrice || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">Product Image</label>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Main Image (Thumbnail)</label>
                   {(imagePreview || editProduct?.image) && <img src={imagePreview || editProduct?.image} className="w-20 h-20 rounded-lg object-cover mb-2" />}
-                  <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) setImagePreview(URL.createObjectURL(f)) }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
+                  <input id="mainImage" type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) setImagePreview(URL.createObjectURL(f)) }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Gallery Images (for Product Detail Page)</label>
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    {productImages.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <img src={img} className="w-16 h-16 rounded-lg object-cover" />
+                        <button type="button" onClick={() => setProductImages(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hidden group-hover:flex items-center justify-center">×</button>
+                      </div>
+                    ))}
+                  </div>
+                  <input type="file" accept="image/*" multiple onChange={async e => {
+                    const files = e.target.files
+                    if (!files?.length) return
+                    setUploading(true)
+                    const urls: string[] = []
+                    for (let i = 0; i < files.length; i++) {
+                      const fd = new FormData(); fd.append('file', files[i])
+                      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+                      const data = await res.json()
+                      if (data.url) urls.push(data.url)
+                    }
+                    setProductImages(prev => [...prev, ...urls])
+                    setUploading(false)
+                    e.target.value = ''
+                  }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
+                  <p className="text-[10px] text-gray-400 mt-1">Upload multiple images for the product gallery. These will be shown on the product detail page.</p>
                 </div>
                 <textarea name="description" placeholder="Description" defaultValue={editProduct?.description || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" />
                 <div className="grid grid-cols-2 gap-3">
@@ -570,7 +599,7 @@ export default function AdminClient() {
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={uploading} className="flex-1 btn-primary disabled:opacity-50">{uploading ? 'Uploading...' : 'Save Product'}</button>
-                  <button type="button" onClick={() => { setShowProductModal(false); setEditProduct(null) }} className="btn-secondary">Cancel</button>
+                  <button type="button" onClick={() => { setShowProductModal(false); setEditProduct(null); setProductImages([]) }} className="btn-secondary">Cancel</button>
                 </div>
               </form>
             </div>

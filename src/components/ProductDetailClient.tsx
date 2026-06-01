@@ -6,7 +6,7 @@ import ProductCard from '@/components/ProductCard'
 import CartSidebar from '@/components/CartSidebar'
 
 function ProductDetail({ product, relatedProducts }: { product: any; relatedProducts: any[] }) {
-  const { addToCart, showToast, cart } = useStore()
+  const { addToCart, showToast } = useStore()
   const [qty, setQty] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
 
@@ -18,6 +18,15 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
     if (outOfStock) return
     for (let i = 0; i < qty; i++) addToCart(product)
     showToast(`${product.name} × ${qty} added to cart!`)
+  }
+
+  function handleBuyNow() {
+    if (outOfStock) return
+    for (let i = 0; i < qty; i++) addToCart(product)
+    const e = document.getElementById('cartSidebar')
+    e?.classList.remove('translate-x-full')
+    e?.classList.add('translate-x-0')
+    document.getElementById('cartOverlay')?.classList.remove('hidden')
   }
 
   const imgSrc = (img: string) => img && img.startsWith('http') ? img : `https://via.placeholder.com/600x400?text=${encodeURIComponent(product.name)}`
@@ -91,11 +100,6 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
               )}
             </div>
 
-            {/* Weight */}
-            <div className="mt-4">
-              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">{product.weight}</span>
-            </div>
-
             {/* Description */}
             {product.description && (
               <div className="mt-5">
@@ -104,28 +108,39 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
               </div>
             )}
 
-            {/* Stock Status */}
+            {/* Specifications */}
             <div className="mt-5">
-              {outOfStock ? (
-                <span className="text-red-500 font-semibold text-sm">❌ Out of Stock</span>
-              ) : (
-                <span className="text-green-600 font-semibold text-sm">✅ In Stock ({product.quantity} available)</span>
-              )}
+              <h3 className="text-sm font-bold text-gray-700 mb-2">Specifications</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="bg-gray-50 px-3 py-2 rounded-lg"><span className="text-gray-400">Weight</span><p className="font-semibold">{product.weight}</p></div>
+                <div className="bg-gray-50 px-3 py-2 rounded-lg"><span className="text-gray-400">Category</span><p className="font-semibold">{product.category}</p></div>
+                <div className="bg-gray-50 px-3 py-2 rounded-lg"><span className="text-gray-400">Rating</span><p className="font-semibold">{product.rating || 'N/A'}/5</p></div>
+                <div className="bg-gray-50 px-3 py-2 rounded-lg"><span className="text-gray-400">Stock</span><p className={`font-semibold ${outOfStock ? 'text-red-500' : 'text-green-600'}`}>{outOfStock ? 'Out of Stock' : `${product.quantity} available`}</p></div>
+              </div>
             </div>
 
-            {/* Quantity + Add to Cart (Desktop) */}
-            <div className="hidden md:flex items-center gap-4 mt-6">
-              <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-10 h-10 text-lg font-bold text-primary hover:bg-gray-50 transition-colors">−</button>
-                <span className="w-12 text-center font-bold">{qty}</span>
-                <button onClick={() => setQty(q => Math.min(product.quantity || 99, q + 1))} className="w-10 h-10 text-lg font-bold text-primary hover:bg-gray-50 transition-colors">+</button>
+            {/* Quantity + Buttons (Desktop) */}
+            <div className="hidden md:block mt-6">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-10 h-10 text-lg font-bold text-primary hover:bg-gray-50 transition-colors">−</button>
+                  <span className="w-12 text-center font-bold">{qty}</span>
+                  <button onClick={() => setQty(q => Math.min(product.quantity || 99, q + 1))} className="w-10 h-10 text-lg font-bold text-primary hover:bg-gray-50 transition-colors">+</button>
+                </div>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={outOfStock}
+                  className="flex-1 py-3.5 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl font-bold text-base shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {outOfStock ? 'Out of Stock' : '🛒 Add to Cart'}
+                </button>
               </div>
               <button
-                onClick={handleAddToCart}
+                onClick={handleBuyNow}
                 disabled={outOfStock}
-                className="flex-1 py-3.5 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl font-bold text-base shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full mt-3 py-3.5 bg-accent text-primary-dark rounded-xl font-bold text-base shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all disabled:bg-gray-300 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {outOfStock ? 'Out of Stock' : '🛒 Add to Cart'}
+                {outOfStock ? 'Unavailable' : '⚡ Buy Now'}
               </button>
             </div>
 
@@ -149,9 +164,43 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
           </div>
         </div>
 
+        {/* Reviews Section */}
+        <div className="mt-12 border-t pt-8">
+          <h2 className="font-display text-xl md:text-2xl text-primary-dark mb-4">Customer Reviews</h2>
+          {product.rating ? (
+            <div className="flex items-center gap-4 mb-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary">{product.rating}</div>
+                <div className="flex mt-1">
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <span key={s} className={`text-sm ${s <= Math.round(product.rating) ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Overall Rating</p>
+              </div>
+              <div className="flex-1 space-y-1">
+                {[5, 4, 3, 2, 1].map(star => {
+                  const pct = star === Math.round(product.rating) ? 60 : star === Math.round(product.rating) - 1 ? 25 : star === Math.round(product.rating) + 1 ? 10 : 5
+                  return (
+                    <div key={star} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 w-3">{star}</span>
+                      <span className="text-yellow-400 text-xs">★</span>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm">No reviews yet for this product.</p>
+          )}
+        </div>
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16">
+          <div className="mt-12">
             <h2 className="font-display text-xl md:text-2xl text-primary-dark mb-6">You May Also Like</h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
               {relatedProducts.map(p => <ProductCard key={p.id} product={p} />)}
@@ -160,20 +209,27 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
         )}
       </section>
 
-      {/* Sticky Mobile Add to Cart */}
+      {/* Sticky Mobile Bottom Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] p-3 z-50">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-            <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-9 h-9 text-lg font-bold text-primary">−</button>
-            <span className="w-8 text-center font-bold text-sm">{qty}</span>
-            <button onClick={() => setQty(q => Math.min(product.quantity || 99, q + 1))} className="w-9 h-9 text-lg font-bold text-primary">+</button>
+            <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-8 h-8 text-lg font-bold text-primary">−</button>
+            <span className="w-7 text-center font-bold text-sm">{qty}</span>
+            <button onClick={() => setQty(q => Math.min(product.quantity || 99, q + 1))} className="w-8 h-8 text-lg font-bold text-primary">+</button>
           </div>
           <button
             onClick={handleAddToCart}
             disabled={outOfStock}
-            className="flex-1 py-3 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl font-bold text-sm shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="flex-1 py-2.5 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl font-bold text-xs shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            {outOfStock ? 'Out of Stock' : `🛒 Add to Cart — ₹${(product.price * qty).toLocaleString()}`}
+            {outOfStock ? 'Out of Stock' : '🛒 Add'}
+          </button>
+          <button
+            onClick={handleBuyNow}
+            disabled={outOfStock}
+            className="flex-1 py-2.5 bg-accent text-primary-dark rounded-xl font-bold text-xs shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {outOfStock ? 'N/A' : '⚡ Buy Now'}
           </button>
         </div>
       </div>
@@ -184,10 +240,9 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
 export default function ProductDetailClient({ product, relatedProducts }: { product: any; relatedProducts: any[] }) {
   return (
     <StoreProvider>
-      {/* Mini Header */}
       <header className="bg-primary-dark text-white sticky top-0 z-[100] shadow-md">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <Link href="/" className="shrink-0"><img src="/logo.png" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
+          <Link href="/" className="shrink-0"><img src="/logo.png?v=2" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
           <div className="flex items-center gap-2">
             <Link href="/" className="text-sm px-3 py-2 rounded-lg hover:bg-white/10">← Shop</Link>
             <button onClick={() => { const e = document.getElementById('cartSidebar'); e?.classList.toggle('translate-x-0'); e?.classList.toggle('translate-x-full'); document.getElementById('cartOverlay')?.classList.toggle('hidden') }} className="relative text-sm px-3 py-2 rounded-lg hover:bg-white/10">

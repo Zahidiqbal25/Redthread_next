@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (!existing) return jsonError('Product not found', 404)
 
     const body = await req.json()
-    const { name, category, price, originalPrice, weight, description, rating, inStock, image, quantity } = body
+    const { name, category, price, originalPrice, weight, description, rating, inStock, image, quantity, images } = body
     const qty = quantity !== undefined ? Number(quantity) : existing.quantity
 
     const { data: updated } = await supabase.from('products').update({
@@ -24,6 +24,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       originalPrice: Number(originalPrice) || existing.originalPrice,
       weight: weight || existing.weight,
       image: image !== undefined ? image : existing.image,
+      images: images !== undefined ? images : (existing.images || []),
       description: description !== undefined ? description : existing.description,
       rating: Number(rating) || existing.rating,
       inStock: qty > 0 ? true : (inStock === false ? false : existing.inStock),
