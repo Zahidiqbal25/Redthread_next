@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store-context'
 export default function ProductCard({ product }: { product: any }) {
   const { addToCart } = useStore()
   const discount = Math.round((1 - product.price / product.originalPrice) * 100)
-  const outOfStock = !product.inStock
+  const outOfStock = !product.inStock && product.quantity <= 0
 
   return (
     <div className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100 hover:-translate-y-1.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 relative group">
