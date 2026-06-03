@@ -2,20 +2,34 @@
 import { useState } from 'react'
 
 export default function TrackOrderModal({ onClose }: { onClose: () => void }) {
-  const [phone, setPhone] = useState('')
-  const [orders, setOrders] = useState<any[] | null>(null)
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState<'email' | 'otp' | 'orders'>('email')
+  const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  async function handleTrack(e: React.FormEvent) {
+  async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault()
     setError(''); setLoading(true)
-    const res = await fetch(`/api/orders/track/${encodeURIComponent(phone.trim())}`)
-    const data = await res.json()
+    const res = await fetch('/api/orders/send-guest-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() }) })
     setLoading(false)
-    if (!res.ok) { setError(data.error); return }
-    if (!data.length) { setError('No orders found. Try your phone number or email.'); return }
-    setOrders(data)
+    if (res.ok) setStep('otp')
+    else { const d = await res.json(); setError(d.error || 'Failed to send code') }
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent) {
+    e.preventDefault()
+    setError(''); setLoading(true)
+    const res = await fetch('/api/orders/verify-guest-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim(), code: otp }) })
+    if (!res.ok) { const d = await res.json(); setError(d.error || 'Invalid code'); setLoading(false); return }
+
+    // Verified - fetch orders
+    const ordersRes = await fetch(`/api/orders/track/${encodeURIComponent(email.trim())}`)
+    const data = await ordersRes.json()
+    setLoading(false)
+    if (Array.isArray(data) && data.length > 0) { setOrders(data); setStep('orders') }
+    else setError('No orders found for this email.')
   }
 
   const statusColor = (s: string) =>
@@ -33,21 +47,40 @@ export default function TrackOrderModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
-          <form onSubmit={handleTrack} className="flex flex-col sm:flex-row gap-3 mb-6">
-            <input
-              type="text" required value={phone} onChange={e => { setPhone(e.target.value); setOrders(null); setError('') }}
-              placeholder="Enter your phone number or email"
-              className="flex-1 px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary text-sm"
-            />
-            <button type="submit" disabled={loading} className="btn-primary text-sm px-5">
-              {loading ? '...' : 'Track'}
-            </button>
-          </form>
+          {step === 'email' && (
+            <form onSubmit={handleSendOtp} className="max-w-sm mx-auto text-center">
+              <p className="text-sm text-gray-500 mb-4">Enter the email you used while placing your order. We'll send a verification code.</p>
+              <input
+                type="email" required value={email} onChange={e => { setEmail(e.target.value); setError('') }}
+                placeholder="Enter your email"
+                className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary text-sm mb-3"
+              />
+              {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full btn-primary text-sm">
+                {loading ? 'Sending...' : 'Send Verification Code'}
+              </button>
+            </form>
+          )}
 
-          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+          {step === 'otp' && (
+            <form onSubmit={handleVerifyOtp} className="max-w-sm mx-auto text-center">
+              <p className="text-sm text-gray-500 mb-4">Enter the 6-digit code sent to <strong>{email}</strong></p>
+              <input
+                type="text" value={otp} onChange={e => { setOtp(e.target.value); setError('') }}
+                maxLength={6} placeholder="6-digit code"
+                className="w-full px-4 py-3 border-2 rounded-lg text-center text-2xl font-bold tracking-[12px] mb-3 outline-none focus:border-primary"
+              />
+              {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full btn-primary text-sm mb-3">
+                {loading ? 'Verifying...' : 'Verify & View Orders'}
+              </button>
+              <button type="button" onClick={() => { setStep('email'); setOtp(''); setError('') }} className="text-primary text-sm font-semibold">← Change Email</button>
+            </form>
+          )}
 
-          {orders && (
+          {step === 'orders' && (
             <div className="space-y-4">
+              <p className="text-sm text-gray-500 mb-4">Orders for <strong>{email}</strong></p>
               {orders.map(order => (
                 <div key={order.id} className="border-2 rounded-xl overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3 bg-gray-50 border-b gap-2">
