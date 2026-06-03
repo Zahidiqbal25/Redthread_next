@@ -27,7 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       images: images !== undefined ? images : (existing.images || []),
       description: description !== undefined ? description : existing.description,
       rating: Number(rating) || existing.rating,
-      inStock: qty > 0 ? true : (inStock === false ? false : existing.inStock),
+      inStock: qty > 0,
       quantity: qty,
     }).eq('id', Number(params.id)).select().single()
 
