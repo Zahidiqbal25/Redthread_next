@@ -143,13 +143,16 @@ export default function CheckoutModal({ onClose }: { onClose: () => void }) {
 
             <p className="text-xs font-bold uppercase tracking-wider text-primary border-b-2 pb-2 pt-2">💳 Payment Method</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[['COD', '💵', 'Cash on Delivery', 'Pay when delivered'], ['Razorpay', '💳', 'Pay Online', 'Card / UPI / NetBanking']].map(([val, icon, name, desc]) => (
-                <label key={val} className={`flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all ${payment === val ? 'border-primary bg-green-50' : 'border-gray-200 hover:border-primary-light'}`}>
-                  <input type="radio" name="payment" value={val} checked={payment === val} onChange={() => setPayment(val)} className="hidden" />
-                  <span className="text-2xl">{icon}</span>
-                  <div><div className="font-bold text-sm">{name}</div><div className="text-xs text-gray-400">{desc}</div></div>
-                </label>
-              ))}
+              <label className={`flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all ${payment === 'COD' ? 'border-primary bg-green-50' : 'border-gray-200 hover:border-primary-light'}`}>
+                <input type="radio" name="payment" value="COD" checked={payment === 'COD'} onChange={() => setPayment('COD')} className="hidden" />
+                <span className="text-2xl">💵</span>
+                <div><div className="font-bold text-sm">Cash on Delivery</div><div className="text-xs text-gray-400">Pay when delivered</div></div>
+              </label>
+              <label className="flex items-center gap-3 p-3.5 border-2 rounded-xl border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed">
+                <input type="radio" name="payment" disabled className="hidden" />
+                <span className="text-2xl">💳</span>
+                <div><div className="font-bold text-sm">Pay Online</div><div className="text-xs text-gray-400">Coming soon</div></div>
+              </label>
             </div>
 
             <button type="submit" disabled={loading} className="w-full py-3.5 bg-gradient-to-r from-primary-dark to-primary-light text-white rounded-xl font-bold text-lg shadow-lg hover:-translate-y-0.5 transition-transform disabled:bg-gray-400 disabled:transform-none">

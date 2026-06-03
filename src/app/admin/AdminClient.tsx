@@ -69,6 +69,19 @@ export default function AdminClient() {
     loadAll()
   }
 
+  async function moveProduct(id: number, direction: 'up' | 'down') {
+    const idx = products.findIndex(p => p.id === id)
+    if (idx === -1) return
+    if (direction === 'up' && idx === 0) return
+    if (direction === 'down' && idx === products.length - 1) return
+    const newProducts = [...products]
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    ;[newProducts[idx], newProducts[swapIdx]] = [newProducts[swapIdx], newProducts[idx]]
+    setProducts(newProducts)
+    const order = newProducts.map(p => p.id)
+    await fetch('/api/settings/product-order', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order }) })
+  }
+
   async function uploadImage(file: File): Promise<string> {
     setUploading(true)
     const fd = new FormData()
@@ -424,16 +437,19 @@ export default function AdminClient() {
             </div>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
               <table className="w-full text-sm min-w-[600px]">
-                <thead><tr className="bg-gray-50 text-left text-xs uppercase text-gray-500"><th className="p-3">Image</th><th className="p-3">Name</th><th className="p-3">Category</th><th className="p-3">Price</th><th className="p-3">Qty</th><th className="p-3">Actions</th></tr></thead>
+                <thead><tr className="bg-gray-50 text-left text-xs uppercase text-gray-500"><th className="p-3">#</th><th className="p-3">Image</th><th className="p-3">Name</th><th className="p-3">Category</th><th className="p-3">Price</th><th className="p-3">Qty</th><th className="p-3">Actions</th></tr></thead>
                 <tbody>
-                  {products.map(p => (
+                  {products.map((p, idx) => (
                     <tr key={p.id} className="border-t hover:bg-gray-50">
+                      <td className="p-3 text-xs text-gray-400">{idx + 1}</td>
                       <td className="p-3"><img src={p.image} className="w-10 h-10 rounded-lg object-cover" onError={e => (e.currentTarget.src = 'https://via.placeholder.com/40')} /></td>
                       <td className="p-3 font-semibold">{p.name}</td>
                       <td className="p-3">{p.category}</td>
                       <td className="p-3">₹{p.price} <span className="text-gray-400 line-through text-xs">₹{p.originalPrice}</span></td>
                       <td className="p-3"><span className={p.quantity > 0 ? 'text-primary font-bold' : 'text-red-500 font-bold'}>{p.quantity ?? 0}</span></td>
-                      <td className="p-3 flex gap-2">
+                      <td className="p-3 flex gap-1">
+                        <button onClick={() => moveProduct(p.id, 'up')} className="px-1.5 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200" title="Move Up">⬆️</button>
+                        <button onClick={() => moveProduct(p.id, 'down')} className="px-1.5 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200" title="Move Down">⬇️</button>
                         <button onClick={() => { setEditProduct(p); setImagePreview(''); setProductImages(p.images || []); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
                         <button onClick={() => deleteProduct(p.id)} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-red-100 hover:text-red-600">🗑</button>
                       </td>

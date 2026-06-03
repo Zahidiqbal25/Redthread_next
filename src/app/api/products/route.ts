@@ -2,9 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonError, jsonOk } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
-  const { data } = await supabase.from('products').select('*').order('id')
-  return jsonOk(data || [])
+  const [{ data: products }, { data: orderSetting }] = await Promise.all([
+    supabase.from('products').select('*'),
+    supabase.from('settings').select('value').eq('key', 'product_order').single()
+  ])
+  
+  if (orderSetting?.value && products) {
+    const order: number[] = JSON.parse(orderSetting.value)
+    products.sort((a: any, b: any) => {
+      const ai = order.indexOf(a.id)
+      const bi = order.indexOf(b.id)
+      if (ai === -1 && bi === -1) return a.id - b.id
+      if (ai === -1) return 1
+      if (bi === -1) return 1
+      return ai - bi
+    })
+  }
+
+  return jsonOk(products || [])
 }
 
 export async function POST(req: NextRequest) {
