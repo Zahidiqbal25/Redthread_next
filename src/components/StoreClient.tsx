@@ -63,10 +63,26 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
   const [trackOpen, setTrackOpen] = useState(false)
   const [resetToken, setResetToken] = useState<string | null>(null)
 
+  const { setUser, showToast } = useStore()
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('reset_token')
     if (token) { setResetToken(token); window.history.replaceState({}, '', '/') }
+    const googleUser = params.get('google_user')
+    if (googleUser) {
+      try {
+        const user = JSON.parse(decodeURIComponent(googleUser))
+        setUser(user)
+        showToast(`Welcome, ${user.name}!`)
+      } catch {}
+      window.history.replaceState({}, '', '/')
+    }
+    const authError = params.get('auth_error')
+    if (authError) {
+      showToast('❌ Google sign-in failed. Please try again.')
+      window.history.replaceState({}, '', '/')
+    }
   }, [])
 
   const filtered = useMemo(() => {
