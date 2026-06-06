@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonError, jsonOk } from '@/lib/utils'
+import { sendNewOrderNotificationToAdmin } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,9 @@ export async function POST(req: NextRequest) {
         pincode: customer.pincode, phone: customer.phone,
       }).eq('id', userId)
     }
+
+    // Notify admin
+    sendNewOrderNotificationToAdmin(order).catch(() => {})
 
     return jsonOk(order, 201)
   } catch (err: any) {
