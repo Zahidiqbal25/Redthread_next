@@ -60,7 +60,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem('df_user')
   }
 
-  const logout = () => { setUser(null); showToast('Logged out successfully') }
+  const logout = () => { setUser(null); setCart([]); showToast('Logged out successfully') }
 
   const showToast = (msg: string) => {
     setToast(msg)
