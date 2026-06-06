@@ -9,6 +9,8 @@ export async function POST(req: NextRequest) {
   const { data: user } = await supabase.from('users').select('*').eq('email', email.toLowerCase()).single()
   if (!user || user.password !== hashPassword(password))
     return jsonError('Invalid email or password', 401)
+  if (user.blocked)
+    return jsonError('Your account has been blocked. Please contact support.', 403)
 
   return jsonOk(sanitizeUser(user))
 }

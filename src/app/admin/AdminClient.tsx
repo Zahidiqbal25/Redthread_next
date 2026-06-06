@@ -23,6 +23,8 @@ export default function AdminClient() {
   const [uploading, setUploading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editCategory, setEditCategory] = useState<any>(null)
+  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [userOrders, setUserOrders] = useState<any[]>([])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && sessionStorage.getItem('df_admin') === 'true') setAuthed(true)
@@ -31,14 +33,15 @@ export default function AdminClient() {
   useEffect(() => { if (authed) loadAll() }, [authed])
 
   async function loadAll() {
+    const t = Date.now()
     const [s, p, o, c, u, ct, sl] = await Promise.all([
-      fetch('/api/stats').then(r => r.json()),
-      fetch('/api/products').then(r => r.json()),
-      fetch('/api/orders').then(r => r.json()),
-      fetch('/api/categories').then(r => r.json()),
-      fetch('/api/users').then(r => r.json()),
-      fetch('/api/settings/contact?t=' + Date.now()).then(r => r.json()),
-      fetch('/api/settings/sliders').then(r => r.json()),
+      fetch(`/api/stats?t=${t}`).then(r => r.json()),
+      fetch(`/api/products?t=${t}`).then(r => r.json()),
+      fetch(`/api/orders?t=${t}`).then(r => r.json()),
+      fetch(`/api/categories?t=${t}`).then(r => r.json()),
+      fetch(`/api/users?t=${t}`).then(r => r.json()),
+      fetch(`/api/settings/contact?t=${t}`).then(r => r.json()),
+      fetch(`/api/settings/sliders?t=${t}`).then(r => r.json()),
     ])
     setStats(s); setProducts(p); setOrders(Array.isArray(o) ? o.sort((a: any, b: any) => b.id - a.id) : []); setCategories(c); setUsers(u); setContact(ct)
     if (sl.sliders?.length) setSliders(sl.sliders)
@@ -173,6 +176,25 @@ export default function AdminClient() {
     if (!confirm('Delete this user?')) return
     await fetch(`/api/users/${id}`, { method: 'DELETE' })
     loadAll()
+  }
+
+  async function viewUserDetails(user: any) {
+    setSelectedUser(user)
+    setUserOrders([])
+    try {
+      const res = await fetch(`/api/users/${user.id}/orders?t=${Date.now()}`)
+      const text = await res.text()
+      const data = JSON.parse(text)
+      setUserOrders(Array.isArray(data) ? data : [])
+    } catch {
+      setUserOrders([])
+    }
+  }
+
+  async function toggleBlockUser(id: number, blocked: boolean) {
+    await fetch(`/api/users/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ blocked: !blocked }) })
+    loadAll()
+    if (selectedUser?.id === id) setSelectedUser({ ...selectedUser, blocked: !blocked })
   }
 
   function printInvoice(o: any) {
@@ -371,11 +393,110 @@ export default function AdminClient() {
         {section === 'dashboard' && (
           <>
             <h1 className="font-display text-2xl mb-6">Dashboard</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              {[['📦', stats.totalProducts, 'Products'], ['🧾', stats.totalOrders, 'Orders'], ['💰', `₹${(stats.revenue || 0).toLocaleString()}`, 'Revenue'], ['⏳', stats.pending, 'Pending']].map(([icon, val, label]) => (
-                <div key={label as string} className="bg-white p-6 rounded-xl shadow-sm"><span className="text-2xl">{icon}</span><div className="text-2xl font-bold text-primary mt-2">{val}</div><div className="text-sm text-gray-500">{label}</div></div>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+              {[
+                ['🧾', stats.totalOrders, 'Total Orders', 'bg-blue-50 text-blue-700'],
+                ['💰', `₹${(stats.revenue || 0).toLocaleString()}`, 'Revenue', 'bg-green-50 text-green-700'],
+                ['📦', stats.totalProducts, 'Products', 'bg-purple-50 text-purple-700'],
+                ['👥', stats.totalUsers, 'Customers', 'bg-orange-50 text-orange-700'],
+                ['⏳', stats.pending, 'Pending', 'bg-yellow-50 text-yellow-700'],
+                ['✅', stats.confirmed, 'Confirmed', 'bg-emerald-50 text-emerald-700'],
+                ['🚚', stats.shipped, 'Shipped', 'bg-indigo-50 text-indigo-700'],
+                ['⚠️', stats.lowStock?.length || 0, 'Low Stock', 'bg-red-50 text-red-700'],
+              ].map(([icon, val, label, color]) => (
+                <div key={label as string} className={`p-4 rounded-xl shadow-sm ${color}`}>
+                  <span className="text-xl">{icon}</span>
+                  <div className="text-xl font-bold mt-1">{val}</div>
+                  <div className="text-xs opacity-70">{label}</div>
+                </div>
               ))}
             </div>
+
+            {/* Monthly Sales Graph */}
+            <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
+              <h2 className="font-semibold mb-4">📊 Monthly Sales (Last 6 Months)</h2>
+              <div className="flex items-end gap-2 h-40">
+                {(stats.monthlySales || []).map((m: any, i: number) => {
+                  const maxVal = Math.max(...(stats.monthlySales || []).map((s: any) => s.total), 1)
+                  const height = Math.max((m.total / maxVal) * 100, 4)
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] font-bold text-primary">₹{m.total >= 1000 ? `${(m.total/1000).toFixed(1)}k` : m.total}</span>
+                      <div className="w-full bg-gradient-to-t from-primary to-primary-light rounded-t-md transition-all" style={{ height: `${height}%` }} />
+                      <span className="text-[10px] text-gray-500">{m.month}</span>
+                      <span className="text-[9px] text-gray-400">{m.orders} orders</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Top Selling Products */}
+              <div className="bg-white rounded-xl shadow-sm p-5">
+                <h2 className="font-semibold mb-3">🏆 Top Selling Products</h2>
+                {(stats.topSelling || []).length === 0 ? (
+                  <p className="text-sm text-gray-400">No sales data yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(stats.topSelling || []).map((p: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate">{p.name}</p>
+                          <p className="text-xs text-gray-400">{p.qty} sold • ₹{p.revenue.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Low Stock Products */}
+              <div className="bg-white rounded-xl shadow-sm p-5">
+                <h2 className="font-semibold mb-3">⚠️ Low Stock Products</h2>
+                {(stats.lowStock || []).length === 0 ? (
+                  <p className="text-sm text-gray-400">All products are well stocked.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {(stats.lowStock || []).map((p: any) => (
+                      <div key={p.id} className="flex items-center gap-3 p-2 bg-red-50 rounded-lg">
+                        <img src={p.image} className="w-8 h-8 rounded object-cover" onError={e => (e.currentTarget.src = 'https://via.placeholder.com/32')} />
+                        <span className="text-sm font-semibold flex-1 truncate">{p.name}</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.quantity === 0 ? 'bg-red-200 text-red-700' : 'bg-yellow-200 text-yellow-700'}`}>{p.quantity} left</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Orders */}
+            <div className="bg-white rounded-xl shadow-sm p-5 mb-6">
+              <h2 className="font-semibold mb-3">🕔 Recent Orders</h2>
+              {(stats.recentOrders || []).length === 0 ? (
+                <p className="text-sm text-gray-400">No orders yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[500px]">
+                    <thead><tr className="text-left text-xs uppercase text-gray-400"><th className="pb-2">#</th><th className="pb-2">Customer</th><th className="pb-2">Total</th><th className="pb-2">Status</th><th className="pb-2">Date</th></tr></thead>
+                    <tbody>
+                      {(stats.recentOrders || []).map((o: any) => (
+                        <tr key={o.id} className="border-t">
+                          <td className="py-2 font-semibold">#{o.id}</td>
+                          <td className="py-2">{o.customerName}</td>
+                          <td className="py-2 font-bold text-primary">₹{o.total?.toLocaleString()}</td>
+                          <td className="py-2"><span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${o.status === 'Delivered' ? 'bg-green-100 text-green-700' : o.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{o.status || 'Pending'}</span></td>
+                          <td className="py-2 text-xs text-gray-400">{(o.date || o.created_at) ? new Date(o.date || o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
             {/* Contact */}
             <div className="bg-white rounded-xl shadow-sm p-5">
               <h2 className="font-semibold mb-3">📞 Contact Info</h2>
@@ -540,23 +661,90 @@ export default function AdminClient() {
         {section === 'users' && (
           <>
             <h1 className="font-display text-2xl mb-6">Users ({users.length})</h1>
-            <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
-              <table className="w-full text-sm min-w-[500px]">
-                <thead><tr className="bg-gray-50 text-left text-xs uppercase text-gray-500"><th className="p-3">ID</th><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">City</th><th className="p-3">Actions</th></tr></thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id} className="border-t hover:bg-gray-50">
-                      <td className="p-3">#{u.id}</td>
-                      <td className="p-3 font-semibold">{u.name}</td>
-                      <td className="p-3">{u.email}</td>
-                      <td className="p-3">{u.phone || '—'}</td>
-                      <td className="p-3">{u.city || '—'}</td>
-                      <td className="p-3"><button onClick={() => deleteUser(u.id)} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-red-100">🗑</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+            {selectedUser ? (
+              <div className="bg-white rounded-xl shadow-sm p-5">
+                <button onClick={() => setSelectedUser(null)} className="text-primary text-sm font-semibold mb-4">← Back to Users</button>
+                <div className="flex flex-col sm:flex-row gap-6">
+                  {/* User Info */}
+                  <div className="sm:w-1/3">
+                    <div className="bg-gray-50 rounded-xl p-5">
+                      <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold mb-3">{selectedUser.name?.charAt(0)?.toUpperCase()}</div>
+                      <h3 className="font-bold text-lg">{selectedUser.name}</h3>
+                      <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                      <p className="text-sm text-gray-500">{selectedUser.phone || '—'}</p>
+                      <div className="mt-4 pt-4 border-t">
+                        <p className="text-xs font-bold uppercase text-gray-400 mb-1">Address</p>
+                        <p className="text-sm">{selectedUser.address || '—'}</p>
+                        <p className="text-sm">{selectedUser.city || ''}{selectedUser.pincode ? ` — ${selectedUser.pincode}` : ''}</p>
+                      </div>
+                      <div className="mt-4 pt-4 border-t">
+                        <p className="text-xs font-bold uppercase text-gray-400 mb-1">Total Spending</p>
+                        <p className="text-2xl font-bold text-primary">₹{userOrders.reduce((s: number, o: any) => s + (o.total || 0), 0).toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">{userOrders.length} orders placed</p>
+                      </div>
+                      <div className="mt-4 pt-4 border-t flex gap-2">
+                        <button onClick={() => toggleBlockUser(selectedUser.id, selectedUser.blocked)} className={`flex-1 py-2 rounded-lg text-xs font-bold ${selectedUser.blocked ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}>
+                          {selectedUser.blocked ? '✅ Unblock User' : '🚫 Block User'}
+                        </button>
+                        <button onClick={() => { deleteUser(selectedUser.id); setSelectedUser(null) }} className="flex-1 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">🗑 Delete</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Order History */}
+                  <div className="sm:w-2/3">
+                    <h3 className="font-semibold mb-3">📦 Order History</h3>
+                    {userOrders.length === 0 ? (
+                      <p className="text-gray-400 text-sm">No orders yet.</p>
+                    ) : (
+                      <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                        {userOrders.map((o: any) => (
+                          <div key={o.id} className="border rounded-xl p-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-bold text-sm">#{o.id}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-primary">₹{o.total?.toLocaleString()}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${o.status === 'Delivered' ? 'bg-green-100 text-green-700' : o.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{o.status || 'Pending'}</span>
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {(Array.isArray(o.items) ? o.items : []).map((i: any) => `${i.name} ×${i.qty}`).join(', ')}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">{(o.date || o.created_at) ? new Date(o.date || o.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'} • {o.payment}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+                <table className="w-full text-sm min-w-[600px]">
+                  <thead><tr className="bg-gray-50 text-left text-xs uppercase text-gray-500"><th className="p-3">ID</th><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">City</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u.id} className={`border-t hover:bg-gray-50 ${u.blocked ? 'bg-red-50/50' : ''}`}>
+                        <td className="p-3">#{u.id}</td>
+                        <td className="p-3 font-semibold">{u.name}</td>
+                        <td className="p-3">{u.email}</td>
+                        <td className="p-3">{u.phone || '—'}</td>
+                        <td className="p-3">{u.city || '—'}</td>
+                        <td className="p-3">
+                          {u.blocked ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-semibold">Blocked</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Active</span>}
+                        </td>
+                        <td className="p-3 flex gap-1">
+                          <button onClick={() => viewUserDetails(u)} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs hover:bg-blue-100">👁 View</button>
+                          <button onClick={() => toggleBlockUser(u.id, u.blocked)} className={`px-2 py-1 rounded text-xs ${u.blocked ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}>{u.blocked ? '✅' : '🚫'}</button>
+                          <button onClick={() => deleteUser(u.id)} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-red-100">🗑</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </>
         )}
 

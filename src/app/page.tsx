@@ -1,8 +1,13 @@
 import { supabase } from '@/lib/supabase'
 import StoreClient from '@/components/StoreClient'
+import type { Metadata } from 'next'
 
-// Server Component - fetches data at request time (SSR)
-// This is a major Next.js advantage: SEO-friendly, fast initial load
+export const metadata: Metadata = {
+  title: 'Shop Premium Dry Fruits & Nuts Online',
+  description: 'Buy premium Kashmiri dry fruits online at best prices. California almonds, cashews, walnuts, pistachios, saffron & more. Free delivery above ₹999.',
+  alternates: { canonical: 'https://www.valenuts.com' },
+}
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
