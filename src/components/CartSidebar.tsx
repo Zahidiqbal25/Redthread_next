@@ -1,8 +1,8 @@
 'use client'
 import { useStore } from '@/lib/store-context'
 
-export default function CartSidebar({ onCheckout }: { onCheckout: () => void }) {
-  const { cart, updateQty, removeFromCart } = useStore()
+export default function CartSidebar({ onCheckout, onLogin }: { onCheckout: () => void; onLogin?: () => void }) {
+  const { cart, user, updateQty, removeFromCart, showToast } = useStore()
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0)
   const count = cart.reduce((s, i) => s + i.qty, 0)
 
@@ -10,6 +10,17 @@ export default function CartSidebar({ onCheckout }: { onCheckout: () => void }) 
     document.getElementById('cartSidebar')?.classList.add('translate-x-full')
     document.getElementById('cartSidebar')?.classList.remove('translate-x-0')
     document.getElementById('cartOverlay')?.classList.add('hidden')
+  }
+
+  function handleCheckout() {
+    if (!user) {
+      close()
+      if (onLogin) onLogin()
+      else showToast('Please login to proceed to checkout')
+      return
+    }
+    close()
+    onCheckout()
   }
 
   return (
@@ -55,8 +66,8 @@ export default function CartSidebar({ onCheckout }: { onCheckout: () => void }) 
               <span className="text-primary">₹{total.toLocaleString()}</span>
             </div>
             {total < 999 && <p className="text-xs text-center text-gray-500 mb-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2">Add ₹{999 - total} more for FREE delivery!</p>}
-            <button onClick={() => { close(); onCheckout() }} className="w-full py-3 bg-gradient-to-r from-primary-dark to-primary-light text-white rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-transform">
-              Proceed to Checkout
+            <button onClick={handleCheckout} className="w-full py-3 bg-gradient-to-r from-primary-dark to-primary-light text-white rounded-xl font-bold shadow-lg hover:-translate-y-0.5 transition-transform">
+              {user ? 'Proceed to Checkout' : '🔒 Login to Checkout'}
             </button>
           </div>
         )}

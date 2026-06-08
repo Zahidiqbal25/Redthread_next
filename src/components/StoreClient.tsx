@@ -53,6 +53,44 @@ function ResetPasswordModal({ token, onClose }: { token: string; onClose: () => 
   )
 }
 
+function CompleteProfileModal({ onClose }: { onClose: () => void }) {
+  const { user, setUser, showToast } = useStore()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError(''); setLoading(true)
+    const fd = new FormData(e.currentTarget)
+    const body = { name: fd.get('name'), phone: fd.get('phone'), address: fd.get('address'), city: fd.get('city'), pincode: fd.get('pincode') }
+    const res = await fetch(`/api/users/${user!.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const data = await res.json()
+    setLoading(false)
+    if (res.ok) { setUser(data); onClose(); showToast(`Welcome, ${data.name}! Profile completed.`) }
+    else setError(data.error || 'Failed to save')
+  }
+
+  return (
+    <div className="modal-overlay open">
+      <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8 max-h-screen md:max-h-[90vh] overflow-y-auto">
+        <h2 className="font-display text-xl mb-2">👋 Complete Your Registration</h2>
+        <p className="text-sm text-gray-500 mb-5">Please fill in your details to continue using Valenuts.</p>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div><label className="text-sm font-semibold text-gray-600 block mb-1">Full Name</label><input name="name" required defaultValue={user?.name || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+          <div><label className="text-sm font-semibold text-gray-600 block mb-1">Phone Number</label><input name="phone" type="tel" required placeholder="e.g. 9876543210" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+          <div><label className="text-sm font-semibold text-gray-600 block mb-1">Address</label><textarea name="address" required placeholder="Your full address" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className="text-sm font-semibold text-gray-600 block mb-1">City</label><input name="city" required placeholder="City" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+            <div><label className="text-sm font-semibold text-gray-600 block mb-1">Pincode</label><input name="pincode" required placeholder="Pincode" className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+          </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button type="submit" disabled={loading} className="w-full btn-primary">{loading ? 'Saving...' : 'Complete Registration'}</button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function StoreContent({ initialProducts, initialCategories }: { initialProducts: any[]; initialCategories: any[] }) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
@@ -62,8 +100,13 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
   const [profileOpen, setProfileOpen] = useState(false)
   const [trackOpen, setTrackOpen] = useState(false)
   const [resetToken, setResetToken] = useState<string | null>(null)
+  const [completeProfileOpen, setCompleteProfileOpen] = useState(false)
 
-  const { setUser, showToast } = useStore()
+  const { setUser, showToast, setOnRequireAuth } = useStore()
+
+  useEffect(() => {
+    setOnRequireAuth(() => { setAuthMode('register') })
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -74,7 +117,11 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       try {
         const user = JSON.parse(decodeURIComponent(googleUser))
         setUser(user)
-        showToast(`Welcome, ${user.name}!`)
+        if (!user.phone || !user.address) {
+          setCompleteProfileOpen(true)
+        } else {
+          showToast(`Welcome, ${user.name}!`)
+        }
       } catch {}
       window.history.replaceState({}, '', '/')
     }
@@ -104,7 +151,7 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
         onOpenProfile={() => setProfileOpen(true)}
         onOpenOrders={() => setOrdersOpen(true)}
       />
-      <CartSidebar onCheckout={() => setCheckoutOpen(true)} />
+      <CartSidebar onCheckout={() => setCheckoutOpen(true)} onLogin={() => setAuthMode('login')} />
 
       {/* Categories */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-8 pb-5 flex gap-2 md:gap-2.5 flex-wrap justify-center">
@@ -152,6 +199,7 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       <Footer onCategoryClick={setCategory} />
 
       {/* Modals */}
+      {completeProfileOpen && <CompleteProfileModal onClose={() => setCompleteProfileOpen(false)} />}
       {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onSwitch={setAuthMode} />}
       {checkoutOpen && <CheckoutModal onClose={() => setCheckoutOpen(false)} />}
       {ordersOpen && <OrdersModal onClose={() => setOrdersOpen(false)} />}
@@ -163,6 +211,9 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
 }
 
 export default function StoreClient({ initialProducts, initialCategories }: { initialProducts: any[]; initialCategories: any[] }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  if (!mounted) return null
   return (
     <StoreProvider>
       <StoreContent initialProducts={initialProducts} initialCategories={initialCategories} />

@@ -3,114 +3,70 @@ import { useState } from 'react'
 import { useStore } from '@/lib/store-context'
 
 export default function CheckoutModal({ onClose }: { onClose: () => void }) {
-  const { cart, user, clearCart, showToast } = useStore()
+  const { cart, user, setUser, clearCart, showToast } = useStore()
   const [payment, setPayment] = useState('COD')
   const [loading, setLoading] = useState(false)
-  const [guestOtp, setGuestOtp] = useState(false)
-  const [otpCode, setOtpCode] = useState('')
-  const [pendingData, setPendingData] = useState<any>(null)
+  const [profileStep, setProfileStep] = useState(!user?.phone || !user?.address)
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0)
   const shipping = subtotal >= 999 ? 0 : 50
   const total = subtotal + shipping
 
+  async function handleProfileComplete(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    const fd = new FormData(e.currentTarget)
+    const body = { name: fd.get('name'), phone: fd.get('phone'), address: fd.get('address'), city: fd.get('city'), pincode: fd.get('pincode') }
+    const res = await fetch(`/api/users/${user!.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const data = await res.json()
+    setLoading(false)
+    if (res.ok) {
+      setUser(data)
+      setProfileStep(false)
+    } else {
+      showToast('❌ ' + (data.error || 'Failed to update profile'))
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!cart.length) return
+    if (!cart.length || !user) return
     setLoading(true)
 
     const fd = new FormData(e.currentTarget)
     const customer = { name: fd.get('name') as string, phone: fd.get('phone') as string, email: fd.get('email') as string, address: fd.get('address') as string, city: fd.get('city') as string, pincode: fd.get('pincode') as string }
-
-    if (!user) {
-      const res = await fetch('/api/orders/send-guest-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: customer.email }) })
-      setLoading(false)
-      if (!res.ok) { const d = await res.json(); showToast('❌ ' + d.error); return }
-      setPendingData({ customer, total, payment })
-      setGuestOtp(true)
-      return
-    }
-
-    await placeOrder(customer, payment)
+    await finalizeOrder(customer, payment)
   }
 
-  async function handleGuestVerify(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    const res = await fetch('/api/orders/verify-guest-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: pendingData.customer.email, code: otpCode }) })
-    if (!res.ok) { const d = await res.json(); showToast('❌ ' + d.error); setLoading(false); return }
-    await placeOrder(pendingData.customer, pendingData.payment)
-  }
-
-  async function placeOrder(customer: any, payMethod: string) {
-    if (payMethod === 'Razorpay') {
-      if (!(window as any).Razorpay) {
-        showToast('❌ Payment gateway is loading. Please try again.')
-        setLoading(false)
-        return
-      }
-      try {
-        const rzpOrder = await fetch('/api/payments/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: total }) }).then(r => r.json())
-        if (rzpOrder.error) throw new Error(rzpOrder.error)
-
-        const cartSnapshot = [...cart]
-        const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-          amount: rzpOrder.amount, currency: rzpOrder.currency,
-          name: 'Valenuts', order_id: rzpOrder.id,
-          prefill: { name: customer.name, email: customer.email, contact: customer.phone },
-          theme: { color: '#2d5016' },
-          handler: async (response: any) => {
-            try {
-              const verify = await fetch('/api/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(response) }).then(r => r.json())
-              if (verify.verified) {
-                const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id || 0, customer, items: cartSnapshot, total, payment: 'Razorpay', paymentId: response.razorpay_payment_id }) })
-                const order = await res.json()
-                if (res.ok) {
-                  clearCart()
-                  onClose()
-                  showToast(`🎉 Order placed successfully! Order #${order.id}`)
-                } else {
-                  showToast('❌ Order failed: ' + (order.error || 'Unknown error'))
-                }
-              } else {
-                showToast('❌ Payment verification failed')
-              }
-            } catch (err: any) {
-              showToast('❌ Error processing payment: ' + err.message)
-            }
-            setLoading(false)
-          },
-          modal: { ondismiss: () => { setLoading(false) } },
-        }
-        const rzp = new (window as any).Razorpay(options)
-        rzp.on('payment.failed', () => { showToast('❌ Payment failed. Please try again.'); setLoading(false) })
-        rzp.open()
-        return
-      } catch (err: any) { showToast('❌ ' + err.message); setLoading(false); return }
-    }
-
-    await finalizeOrder(customer, 'COD', '')
-  }
-
-  async function finalizeOrder(customer: any, payMethod: string, paymentId: string) {
-    const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user?.id || 0, customer, items: cart, total, payment: payMethod, paymentId }) })
+  async function finalizeOrder(customer: any, payMethod: string) {
+    const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user!.id, customer, items: cart, total, payment: payMethod, paymentId: '' }) })
     const order = await res.json()
     setLoading(false)
-    clearCart()
-    onClose()
-    showToast(`🎉 Order placed successfully! Order #${order.id}`)
+    if (res.ok) {
+      clearCart()
+      onClose()
+      showToast(`🎉 Order placed successfully! Order #${order.id}`)
+    } else {
+      showToast('❌ ' + (order.error || 'Failed to place order'))
+    }
   }
 
-  if (guestOtp) {
+  // Profile completion step for users with incomplete info (e.g. Google OAuth users)
+  if (profileStep) {
     return (
       <div className="modal-overlay open" onClick={onClose}>
-        <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8" onClick={e => e.stopPropagation()}>
-          <h2 className="font-display text-xl mb-2">📧 Verify Email</h2>
-          <p className="text-sm text-gray-500 mb-5">Enter the code sent to <strong>{pendingData?.customer.email}</strong></p>
-          <form onSubmit={handleGuestVerify}>
-            <input type="text" value={otpCode} onChange={e => setOtpCode(e.target.value)} maxLength={6} placeholder="6-digit code" className="w-full px-4 py-3 border-2 rounded-lg text-center text-2xl font-bold tracking-[12px] mb-4 outline-none focus:border-primary" />
-            <button type="submit" disabled={loading} className="w-full btn-primary">{loading ? 'Verifying...' : 'Verify & Place Order'}</button>
+        <div className="bg-white rounded-none md:rounded-xl w-full md:max-w-md p-6 md:p-8 max-h-screen md:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <h2 className="font-display text-xl mb-2">📋 Complete Your Profile</h2>
+          <p className="text-sm text-gray-500 mb-5">Please fill in your details to proceed with checkout.</p>
+          <form onSubmit={handleProfileComplete} className="space-y-3">
+            <div><label className="text-sm font-semibold text-gray-600 block mb-1">Full Name</label><input name="name" required defaultValue={user?.name || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+            <div><label className="text-sm font-semibold text-gray-600 block mb-1">Phone</label><input name="phone" type="tel" required defaultValue={user?.phone || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+            <div><label className="text-sm font-semibold text-gray-600 block mb-1">Address</label><textarea name="address" required defaultValue={user?.address || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-sm font-semibold text-gray-600 block mb-1">City</label><input name="city" required defaultValue={user?.city || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+              <div><label className="text-sm font-semibold text-gray-600 block mb-1">Pincode</label><input name="pincode" required defaultValue={user?.pincode || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" /></div>
+            </div>
+            <button type="submit" disabled={loading} className="w-full btn-primary mt-2">{loading ? 'Saving...' : 'Save & Continue to Checkout'}</button>
           </form>
         </div>
       </div>

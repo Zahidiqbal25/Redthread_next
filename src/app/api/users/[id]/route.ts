@@ -27,8 +27,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const { data } = await supabase.from('users').select('id').eq('id', Number(params.id)).single()
+  const userId = Number(params.id)
+  const { data } = await supabase.from('users').select('id, email').eq('id', userId).single()
   if (!data) return jsonError('User not found', 404)
-  await supabase.from('users').delete().eq('id', Number(params.id))
-  return jsonOk({ message: 'User deleted' })
+
+  // Delete all orders by this user (by userId and by email)
+  await supabase.from('orders').delete().eq('userId', userId)
+  if (data.email) await supabase.from('orders').delete().eq('customerEmail', data.email)
+
+  // Delete the user
+  await supabase.from('users').delete().eq('id', userId)
+  return jsonOk({ message: 'User and related data deleted' })
 }

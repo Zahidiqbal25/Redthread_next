@@ -47,7 +47,6 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
           {!user ? (
             <>
               <button onClick={() => onOpenAuth('login')} className="text-sm px-2 md:px-3 py-2 rounded-lg hover:bg-white/10">👤 <span className="hidden sm:inline">Login</span></button>
-              <button onClick={onOpenTrack} className="text-sm px-3 py-2 rounded-lg hover:bg-white/10 hidden md:block">📦 Track Order</button>
             </>
           ) : (
             <div className="relative" ref={menuRef}>
@@ -58,7 +57,6 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
                 <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl min-w-[180px] overflow-hidden z-50">
                   <button onClick={() => { onOpenOrders(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">📦 My Orders</button>
                   <button onClick={() => { onOpenProfile(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">⚙️ My Profile</button>
-                  <button onClick={() => { onOpenTrack(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 md:hidden">📦 Track Order</button>
                   <button onClick={() => { logout(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">🚪 Logout</button>
                 </div>
               )}
@@ -67,7 +65,7 @@ export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfil
 
           <button onClick={() => { const e = document.getElementById('cartSidebar'); e?.classList.toggle('translate-x-0'); e?.classList.toggle('translate-x-full'); document.getElementById('cartOverlay')?.classList.toggle('hidden') }} className="relative text-sm px-2 md:px-3 py-2 rounded-lg hover:bg-white/10">
             🛒 <span className="hidden sm:inline">Cart</span>
-            <span className="absolute -top-1 -right-1 bg-accent text-primary-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-accent text-primary-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>}
           </button>
         </div>
       </div>

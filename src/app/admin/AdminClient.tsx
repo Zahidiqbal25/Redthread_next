@@ -20,6 +20,7 @@ export default function AdminClient() {
   const [showProductModal, setShowProductModal] = useState(false)
   const [imagePreview, setImagePreview] = useState('')
   const [productImages, setProductImages] = useState<string[]>([])
+  const [productVideo, setProductVideo] = useState('')
   const [uploading, setUploading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editCategory, setEditCategory] = useState<any>(null)
@@ -106,12 +107,13 @@ export default function AdminClient() {
     }
 
     const images = productImages.length > 0 ? productImages : (editProduct?.images || [])
-    const body = { name: fd.get('name'), category: fd.get('category'), price: Number(fd.get('price')), originalPrice: Number(fd.get('originalPrice')), weight: fd.get('weight'), description: fd.get('description'), rating: Number(fd.get('rating')) || 4.5, quantity: Number(fd.get('quantity')) || 0, image, images, inStock: Number(fd.get('quantity')) > 0 }
+    const video = productVideo || editProduct?.video || ''
+    const body = { name: fd.get('name'), category: fd.get('category'), price: Number(fd.get('price')), originalPrice: Number(fd.get('originalPrice')), weight: fd.get('weight'), description: fd.get('description'), rating: Number(fd.get('rating')) || 4.5, quantity: Number(fd.get('quantity')) || 0, image, images, video, inStock: Number(fd.get('quantity')) > 0 }
 
     if (editProduct) await fetch(`/api/products/${editProduct.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     else await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-    setShowProductModal(false); setEditProduct(null); setImagePreview(''); setProductImages([]); loadAll()
+    setShowProductModal(false); setEditProduct(null); setImagePreview(''); setProductImages([]); setProductVideo(''); loadAll()
   }
 
 
@@ -554,7 +556,7 @@ export default function AdminClient() {
           <>
             <div className="flex justify-between items-center mb-6">
               <h1 className="font-display text-2xl">Products</h1>
-              <button onClick={() => { setEditProduct(null); setImagePreview(''); setProductImages([]); setShowProductModal(true) }} className="btn-primary text-sm">+ Add Product</button>
+              <button onClick={() => { setEditProduct(null); setImagePreview(''); setProductImages([]); setProductVideo(''); setShowProductModal(true) }} className="btn-primary text-sm">+ Add Product</button>
             </div>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
               <table className="w-full text-sm min-w-[600px]">
@@ -571,7 +573,7 @@ export default function AdminClient() {
                       <td className="p-3 flex gap-1">
                         <button onClick={() => moveProduct(p.id, 'up')} className="px-1.5 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200" title="Move Up">⬆️</button>
                         <button onClick={() => moveProduct(p.id, 'down')} className="px-1.5 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200" title="Move Down">⬇️</button>
-                        <button onClick={() => { setEditProduct(p); setImagePreview(''); setProductImages(p.images || []); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
+                        <button onClick={() => { setEditProduct(p); setImagePreview(''); setProductImages(p.images || []); setProductVideo(p.video || ''); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
                         <button onClick={() => deleteProduct(p.id)} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-red-100 hover:text-red-600">🗑</button>
                       </td>
                     </tr>
@@ -771,7 +773,7 @@ export default function AdminClient() {
                   <input id="mainImage" type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) setImagePreview(URL.createObjectURL(f)) }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">Gallery Images (for Product Detail Page)</label>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Gallery Images (max 5)</label>
                   <div className="flex gap-2 flex-wrap mb-2">
                     {productImages.map((img, idx) => (
                       <div key={idx} className="relative group">
@@ -780,22 +782,48 @@ export default function AdminClient() {
                       </div>
                     ))}
                   </div>
-                  <input type="file" accept="image/*" multiple onChange={async e => {
-                    const files = e.target.files
-                    if (!files?.length) return
-                    setUploading(true)
-                    const urls: string[] = []
-                    for (let i = 0; i < files.length; i++) {
-                      const fd = new FormData(); fd.append('file', files[i])
+                  {productImages.length < 5 && (
+                    <input type="file" accept="image/*" multiple onChange={async e => {
+                      const files = e.target.files
+                      if (!files?.length) return
+                      const remaining = 5 - productImages.length
+                      setUploading(true)
+                      const urls: string[] = []
+                      for (let i = 0; i < Math.min(files.length, remaining); i++) {
+                        const fd = new FormData(); fd.append('file', files[i])
+                        const res = await fetch('/api/upload', { method: 'POST', body: fd })
+                        const data = await res.json()
+                        if (data.url) urls.push(data.url)
+                      }
+                      setProductImages(prev => [...prev, ...urls].slice(0, 5))
+                      setUploading(false)
+                      e.target.value = ''
+                    }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
+                  )}
+                  <p className="text-[10px] text-gray-400 mt-1">{productImages.length}/5 images uploaded</p>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Product Video (optional)</label>
+                  {productVideo && (
+                    <div className="relative mb-2 inline-block">
+                      <video src={productVideo} className="w-32 h-20 rounded-lg object-cover" />
+                      <button type="button" onClick={() => setProductVideo('')} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">×</button>
+                    </div>
+                  )}
+                  {!productVideo && (
+                    <input type="file" accept="video/*" onChange={async e => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      setUploading(true)
+                      const fd = new FormData(); fd.append('file', file)
                       const res = await fetch('/api/upload', { method: 'POST', body: fd })
                       const data = await res.json()
-                      if (data.url) urls.push(data.url)
-                    }
-                    setProductImages(prev => [...prev, ...urls])
-                    setUploading(false)
-                    e.target.value = ''
-                  }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
-                  <p className="text-[10px] text-gray-400 mt-1">Upload multiple images for the product gallery. These will be shown on the product detail page.</p>
+                      if (data.url) setProductVideo(data.url)
+                      setUploading(false)
+                      e.target.value = ''
+                    }} className="w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-semibold file:cursor-pointer" />
+                  )}
+                  <p className="text-[10px] text-gray-400 mt-1">Upload one video to showcase the product.</p>
                 </div>
                 <textarea name="description" placeholder="Description" defaultValue={editProduct?.description || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" />
                 <div className="grid grid-cols-2 gap-3">

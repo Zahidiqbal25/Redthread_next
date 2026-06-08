@@ -1,25 +1,31 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { StoreProvider, useStore } from '@/lib/store-context'
 import ProductCard from '@/components/ProductCard'
 import CartSidebar from '@/components/CartSidebar'
 import CheckoutModal from '@/components/CheckoutModal'
+import AuthModal from '@/components/AuthModal'
 
 function ProductDetail({ product, relatedProducts }: { product: any; relatedProducts: any[] }) {
-  const { addToCart, showToast } = useStore()
+  const { addToCart, showToast, setOnRequireAuth } = useStore()
   const [qty, setQty] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null)
+
+  useEffect(() => {
+    setOnRequireAuth(() => { setAuthMode('register') })
+  }, [])
 
   const discount = Math.round((1 - product.price / product.originalPrice) * 100)
   const outOfStock = !product.inStock && product.quantity <= 0
   const images = product.images?.length ? product.images : [product.image]
+  const hasVideo = !!product.video
 
   function handleAddToCart() {
     if (outOfStock) return
     for (let i = 0; i < qty; i++) addToCart(product)
-    showToast(`${product.name} × ${qty} added to cart!`)
   }
 
   function handleBuyNow() {
@@ -35,8 +41,9 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
 
   return (
     <>
-      <CartSidebar onCheckout={() => setCheckoutOpen(true)} />
+      <CartSidebar onCheckout={() => setCheckoutOpen(true)} onLogin={() => setAuthMode('login')} />
       {checkoutOpen && <CheckoutModal onClose={() => setCheckoutOpen(false)} />}
+      {authMode && <AuthModal mode={authMode} onClose={() => setAuthMode(null)} onSwitch={setAuthMode} />}
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
@@ -55,7 +62,7 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
 
           {/* Image Gallery */}
           <div>
-            <div className="relative rounded-2xl overflow-hidden bg-gray-50 aspect-square">
+            <div className="relative rounded-2xl overflow-hidden bg-gray-50 aspect-square group/img">
               {discount > 0 && <span className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold z-10 shadow">{discount}% OFF</span>}
               <img
                 src={imgSrc(images[selectedImage])}
@@ -63,6 +70,17 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
                 className="w-full h-full object-cover"
                 onError={e => (e.currentTarget.src = `https://via.placeholder.com/600x400?text=${encodeURIComponent(product.name)}`)}
               />
+              {images.length > 1 && (
+                <>
+                  <button onClick={() => setSelectedImage(i => (i - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/80 shadow-lg text-gray-700 flex items-center justify-center hover:bg-white transition opacity-0 group-hover/img:opacity-100">‹</button>
+                  <button onClick={() => setSelectedImage(i => (i + 1) % images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/80 shadow-lg text-gray-700 flex items-center justify-center hover:bg-white transition opacity-0 group-hover/img:opacity-100">›</button>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                    {images.map((_: string, i: number) => (
+                      <button key={i} onClick={() => setSelectedImage(i)} className={`w-2 h-2 rounded-full transition-all ${i === selectedImage ? 'bg-primary w-5' : 'bg-white/70'}`} />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
             {images.length > 1 && (
               <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
@@ -243,18 +261,27 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
 export default function ProductDetailClient({ product, relatedProducts }: { product: any; relatedProducts: any[] }) {
   return (
     <StoreProvider>
-      <header className="bg-primary-dark text-white sticky top-0 z-[100] shadow-md">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <Link href="/" className="shrink-0"><img src="/logo.png?v=2" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
-          <div className="flex items-center gap-2">
-            <Link href="/" className="text-sm px-3 py-2 rounded-lg hover:bg-white/10">← Shop</Link>
-            <button onClick={() => { const e = document.getElementById('cartSidebar'); e?.classList.toggle('translate-x-0'); e?.classList.toggle('translate-x-full'); document.getElementById('cartOverlay')?.classList.toggle('hidden') }} className="relative text-sm px-3 py-2 rounded-lg hover:bg-white/10">
-              🛒 Cart
-            </button>
-          </div>
-        </div>
-      </header>
+      <PdpHeader />
       <ProductDetail product={product} relatedProducts={relatedProducts} />
     </StoreProvider>
+  )
+}
+
+function PdpHeader() {
+  const { cart } = useStore()
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0)
+  return (
+    <header className="bg-primary-dark text-white sticky top-0 z-[100] shadow-md">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+        <Link href="/" className="shrink-0"><img src="/logo.png?v=2" alt="Logo" className="h-8 md:h-10 w-auto mix-blend-screen" /></Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="text-sm px-3 py-2 rounded-lg hover:bg-white/10">← Shop</Link>
+          <button onClick={() => { const e = document.getElementById('cartSidebar'); e?.classList.toggle('translate-x-0'); e?.classList.toggle('translate-x-full'); document.getElementById('cartOverlay')?.classList.toggle('hidden') }} className="relative text-sm px-3 py-2 rounded-lg hover:bg-white/10">
+            🛒 Cart
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-accent text-primary-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>}
+          </button>
+        </div>
+      </div>
+    </header>
   )
 }
