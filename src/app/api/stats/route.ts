@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { jsonOk } from '@/lib/utils'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'

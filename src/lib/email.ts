@@ -55,7 +55,6 @@ export async function sendPasswordResetEmail(user: { name: string; email: string
 }
 
 export async function sendOrderCancellationEmail(order: any) {
-  const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items)
   await transporter.sendMail({
     from, to: order.customerEmail,
     subject: `Order #${order.id} Cancelled - Valenuts`,

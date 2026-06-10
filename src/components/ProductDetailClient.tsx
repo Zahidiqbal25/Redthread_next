@@ -21,7 +21,6 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
   const discount = Math.round((1 - product.price / product.originalPrice) * 100)
   const outOfStock = !product.inStock && product.quantity <= 0
   const images = product.images?.length ? product.images : [product.image]
-  const hasVideo = !!product.video
 
   function handleAddToCart() {
     if (outOfStock) return
