@@ -147,7 +147,6 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       <Header
         onSearch={setSearch}
         onOpenAuth={setAuthMode}
-        onOpenTrack={() => setTrackOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenOrders={() => setOrdersOpen(true)}
       />

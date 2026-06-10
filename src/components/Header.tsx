@@ -3,17 +3,15 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store-context'
 
-export default function Header({ onSearch, onOpenAuth, onOpenTrack, onOpenProfile, onOpenOrders }: {
+export default function Header({ onSearch, onOpenAuth, onOpenProfile, onOpenOrders }: {
   onSearch: (q: string) => void
   onOpenAuth: (mode: 'login' | 'register') => void
-  onOpenTrack: () => void
   onOpenProfile: () => void
   onOpenOrders: () => void
 }) {
   const { cart, user, logout } = useStore()
   const [search, setSearch] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const cartCount = cart.reduce((s, i) => s + i.qty, 0)
