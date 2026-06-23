@@ -13,6 +13,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (dup) return jsonError('Category name already exists', 409)
 
   const { data: updated } = await supabase.from('categories').update({ name, emoji: emoji || '', image: image !== undefined ? image : cat.image }).eq('id', Number(params.id)).select().single()
+
+  // Update all products that had the old category name
+  if (cat.name !== name) {
+    await supabase.from('products').update({ category: name }).eq('category', cat.name)
+  }
+
   return jsonOk(updated)
 }
 

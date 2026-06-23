@@ -36,8 +36,19 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
-  const { data: product } = await supabase.from('products').select('*').eq('id', Number(params.id)).single()
+  const [{ data: product }, { data: badgesSetting }] = await Promise.all([
+    supabase.from('products').select('*').eq('id', Number(params.id)).single(),
+    supabase.from('settings').select('value').eq('key', 'trust_badges').single(),
+  ])
   if (!product) notFound()
+
+  const trustBadges = badgesSetting?.value ? JSON.parse(badgesSetting.value) : [
+    { icon: '🚚', title: 'Free Delivery', desc: 'On orders above ₹999' },
+    { icon: '🔄', title: 'Easy Returns', desc: '7-day return policy' },
+    { icon: '✅', title: '100% Authentic', desc: 'Quality guaranteed' },
+    { icon: '📦', title: 'Secure Packing', desc: 'Freshness sealed' },
+  ]
+  product.trust_badges = trustBadges
 
   const { data: related } = await supabase
     .from('products')

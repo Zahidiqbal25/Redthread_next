@@ -91,7 +91,7 @@ function CompleteProfileModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-function StoreContent({ initialProducts, initialCategories }: { initialProducts: any[]; initialCategories: any[] }) {
+function StoreContent({ initialProducts, initialCategories, trustBadges, infoCards }: { initialProducts: any[]; initialCategories: any[]; trustBadges: any[]; infoCards: any[] }) {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null)
@@ -166,6 +166,19 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       <section id="products" className="max-w-7xl mx-auto px-4 md:px-6 pb-16">
         <h2 className="font-display text-2xl md:text-3xl text-center text-primary-dark mt-8 md:mt-10 mb-2">Our Products</h2>
         <p className="text-center text-gray-500 mb-6 md:mb-8 text-sm md:text-base">Premium quality, unbeatable prices</p>
+
+        {/* Trust Badges */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 md:mb-10">
+          {trustBadges.map((badge, i) => (
+            <div key={i} className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2.5 shadow-sm">
+              <span className="text-lg">{badge.icon}</span>
+              <div>
+                <p className="text-xs font-bold text-gray-800">{badge.title}</p>
+                <p className="text-[10px] text-gray-400">{badge.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
         {filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400"><p className="text-4xl mb-2">🔍</p><p>No products found</p></div>
         ) : (
@@ -179,17 +192,12 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
       <section id="why-us" className="bg-gradient-to-br from-primary-dark to-primary py-12 md:py-16 px-4 md:px-6">
         <h2 className="font-display text-2xl md:text-3xl text-center text-white mb-2">Why Choose Valenuts?</h2>
         <p className="text-center text-white/70 mb-8 md:mb-10 text-sm md:text-base">We go the extra mile to bring you the best</p>
-        <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {[
-            ['🌍', 'Globally Sourced', 'Directly sourced from farms in California, Afghanistan, Iran & Chile.'],
-            ['🔬', 'Lab Tested', 'Every batch is tested for quality, purity and freshness.'],
-            ['📦', 'Secure Packaging', 'Airtight, food-grade packaging that locks in freshness.'],
-            ['💰', 'Best Prices', 'Farm-to-door supply chain cuts out middlemen.'],
-          ].map(([icon, title, desc]) => (
-            <div key={title} className="bg-white/10 border border-white/15 rounded-2xl p-4 md:p-8 text-center text-white hover:bg-white/15 hover:-translate-y-1 transition-all backdrop-blur-sm">
-              <span className="text-3xl md:text-4xl block mb-2 md:mb-4">{icon}</span>
-              <h3 className="font-bold text-accent mb-1 md:mb-2 text-sm md:text-base">{title}</h3>
-              <p className="text-xs md:text-sm opacity-85 leading-relaxed">{desc}</p>
+        <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-4 md:gap-6">
+          {infoCards.map((card, i) => (
+            <div key={i} className="w-[calc(50%-0.5rem)] lg:w-[calc(25%-1.125rem)] bg-white/10 border border-white/15 rounded-2xl p-4 md:p-8 text-center text-white hover:bg-white/15 hover:-translate-y-1 transition-all backdrop-blur-sm">
+              <span className="text-3xl md:text-4xl block mb-2 md:mb-4">{card.icon}</span>
+              <h3 className="font-bold text-accent mb-1 md:mb-2 text-sm md:text-base">{card.title}</h3>
+              <p className="text-xs md:text-sm opacity-85 leading-relaxed">{card.desc}</p>
             </div>
           ))}
         </div>
@@ -209,13 +217,13 @@ function StoreContent({ initialProducts, initialCategories }: { initialProducts:
   )
 }
 
-export default function StoreClient({ initialProducts, initialCategories }: { initialProducts: any[]; initialCategories: any[] }) {
+export default function StoreClient({ initialProducts, initialCategories, trustBadges, infoCards }: { initialProducts: any[]; initialCategories: any[]; trustBadges: any[]; infoCards: any[] }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return null
   return (
     <StoreProvider>
-      <StoreContent initialProducts={initialProducts} initialCategories={initialCategories} />
+      <StoreContent initialProducts={initialProducts} initialCategories={initialCategories} trustBadges={trustBadges} infoCards={infoCards} />
     </StoreProvider>
   )
 }

@@ -12,6 +12,8 @@ export default function AdminClient() {
   const [categories, setCategories] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [contact, setContact] = useState({ name: '', email: '', phone: '', address: '', pincode: '' })
+  const [globalBadges, setGlobalBadges] = useState<{icon: string, title: string, desc: string}[]>([])
+  const [infoCards, setInfoCards] = useState<{icon: string, title: string, desc: string}[]>([])
   const [sliders, setSliders] = useState<{images: string[], text: string}[]>([
     { images: [], text: '' }, { images: [], text: '' }, { images: [], text: '' }
   ])
@@ -21,6 +23,7 @@ export default function AdminClient() {
   const [imagePreview, setImagePreview] = useState('')
   const [productImages, setProductImages] = useState<string[]>([])
   const [productVideo, setProductVideo] = useState('')
+  const [productFeatures, setProductFeatures] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editCategory, setEditCategory] = useState<any>(null)
@@ -46,6 +49,10 @@ export default function AdminClient() {
     ])
     setStats(s); setProducts(p); setOrders(Array.isArray(o) ? o.sort((a: any, b: any) => b.id - a.id) : []); setCategories(c); setUsers(u); setContact(ct)
     if (sl.sliders?.length) setSliders(sl.sliders)
+    const badges = await fetch(`/api/settings/trust-badges?t=${t}`, { cache: 'no-store' }).then(r => r.json())
+    if (Array.isArray(badges)) setGlobalBadges(badges)
+    const cards = await fetch(`/api/settings/info-cards?t=${t}`, { cache: 'no-store' }).then(r => r.json())
+    if (Array.isArray(cards)) setInfoCards(cards)
   }
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -108,12 +115,13 @@ export default function AdminClient() {
 
     const images = productImages.length > 0 ? productImages : (editProduct?.images || [])
     const video = productVideo || editProduct?.video || ''
-    const body = { name: fd.get('name'), category: fd.get('category'), price: Number(fd.get('price')), originalPrice: Number(fd.get('originalPrice')), weight: fd.get('weight'), description: fd.get('description'), rating: Number(fd.get('rating')) || 4.5, quantity: Number(fd.get('quantity')) || 0, image, images, video, inStock: Number(fd.get('quantity')) > 0 }
+    const features = productFeatures.filter(f => f.trim())
+    const body = { name: fd.get('name'), category: fd.get('category'), price: Number(fd.get('price')), originalPrice: Number(fd.get('originalPrice')), weight: fd.get('weight'), description: fd.get('description'), rating: Number(fd.get('rating')) || 4.5, quantity: Number(fd.get('quantity')) || 0, image, images, video, features, inStock: Number(fd.get('quantity')) > 0 }
 
     if (editProduct) await fetch(`/api/products/${editProduct.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     else await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-    setShowProductModal(false); setEditProduct(null); setImagePreview(''); setProductImages([]); setProductVideo(''); loadAll()
+    setShowProductModal(false); setEditProduct(null); setImagePreview(''); setProductImages([]); setProductVideo(''); setProductFeatures([]); loadAll()
   }
 
 
@@ -511,6 +519,40 @@ export default function AdminClient() {
               </div>
               <button onClick={saveContact} className="btn-primary text-sm">Save Contact</button>
             </div>
+
+            {/* Trust Badges */}
+            <div className="bg-white rounded-xl shadow-sm p-5 mt-6">
+              <h2 className="font-semibold mb-3">🏅 Trust Badges (shown on home & product pages)</h2>
+              {globalBadges.map((badge, i) => (
+                <div key={i} className="flex gap-2 mb-2 items-center">
+                  <input value={badge.icon} onChange={e => { const b = [...globalBadges]; b[i] = { ...b[i], icon: e.target.value }; setGlobalBadges(b) }} placeholder="🚚" className="w-14 px-2 py-2 border rounded-lg text-center outline-none focus:border-primary" />
+                  <input value={badge.title} onChange={e => { const b = [...globalBadges]; b[i] = { ...b[i], title: e.target.value }; setGlobalBadges(b) }} placeholder="Title" className="flex-1 px-3 py-2 border rounded-lg outline-none focus:border-primary text-sm" />
+                  <input value={badge.desc} onChange={e => { const b = [...globalBadges]; b[i] = { ...b[i], desc: e.target.value }; setGlobalBadges(b) }} placeholder="Description" className="flex-1 px-3 py-2 border rounded-lg outline-none focus:border-primary text-sm" />
+                  <button onClick={() => setGlobalBadges(globalBadges.filter((_, j) => j !== i))} className="w-8 h-8 bg-red-100 text-red-600 rounded-lg text-sm hover:bg-red-200 shrink-0">×</button>
+                </div>
+              ))}
+              <div className="flex gap-2 mt-3">
+                <button onClick={() => setGlobalBadges([...globalBadges, { icon: '', title: '', desc: '' }])} className="text-xs text-primary font-semibold hover:underline">+ Add Badge</button>
+                <button onClick={async () => { const filtered = globalBadges.filter(b => b.title.trim()); await fetch('/api/settings/trust-badges', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ badges: filtered }) }); setGlobalBadges(filtered); alert('Trust badges saved!') }} className="btn-primary text-sm ml-auto">Save Badges</button>
+              </div>
+            </div>
+
+            {/* Info Cards */}
+            <div className="bg-white rounded-xl shadow-sm p-5 mt-6">
+              <h2 className="font-semibold mb-3">🌟 Info Cards ("Why Choose Us" section)</h2>
+              {infoCards.map((card, i) => (
+                <div key={i} className="flex gap-2 mb-2 items-center">
+                  <input value={card.icon} onChange={e => { const c = [...infoCards]; c[i] = { ...c[i], icon: e.target.value }; setInfoCards(c) }} placeholder="🌍" className="w-14 px-2 py-2 border rounded-lg text-center outline-none focus:border-primary" />
+                  <input value={card.title} onChange={e => { const c = [...infoCards]; c[i] = { ...c[i], title: e.target.value }; setInfoCards(c) }} placeholder="Title" className="flex-1 px-3 py-2 border rounded-lg outline-none focus:border-primary text-sm" />
+                  <input value={card.desc} onChange={e => { const c = [...infoCards]; c[i] = { ...c[i], desc: e.target.value }; setInfoCards(c) }} placeholder="Description" className="flex-1 px-3 py-2 border rounded-lg outline-none focus:border-primary text-sm" />
+                  <button onClick={() => setInfoCards(infoCards.filter((_, j) => j !== i))} className="w-8 h-8 bg-red-100 text-red-600 rounded-lg text-sm hover:bg-red-200 shrink-0">×</button>
+                </div>
+              ))}
+              <div className="flex gap-2 mt-3">
+                <button onClick={() => setInfoCards([...infoCards, { icon: '', title: '', desc: '' }])} className="text-xs text-primary font-semibold hover:underline">+ Add Card</button>
+                <button onClick={async () => { const filtered = infoCards.filter(c => c.title.trim()); await fetch('/api/settings/info-cards', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cards: filtered }) }); setInfoCards(filtered); alert('Info cards saved!') }} className="btn-primary text-sm ml-auto">Save Cards</button>
+              </div>
+            </div>
           </>
         )}
 
@@ -556,7 +598,7 @@ export default function AdminClient() {
           <>
             <div className="flex justify-between items-center mb-6">
               <h1 className="font-display text-2xl">Products</h1>
-              <button onClick={() => { setEditProduct(null); setImagePreview(''); setProductImages([]); setProductVideo(''); setShowProductModal(true) }} className="btn-primary text-sm">+ Add Product</button>
+              <button onClick={() => { setEditProduct(null); setImagePreview(''); setProductImages([]); setProductVideo(''); setProductFeatures([]); setShowProductModal(true) }} className="btn-primary text-sm">+ Add Product</button>
             </div>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
               <table className="w-full text-sm min-w-[600px]">
@@ -573,7 +615,7 @@ export default function AdminClient() {
                       <td className="p-3 flex gap-1">
                         <button onClick={() => moveProduct(p.id, 'up')} className="px-1.5 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200" title="Move Up">⬆️</button>
                         <button onClick={() => moveProduct(p.id, 'down')} className="px-1.5 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200" title="Move Down">⬇️</button>
-                        <button onClick={() => { setEditProduct(p); setImagePreview(''); setProductImages(p.images || []); setProductVideo(p.video || ''); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
+                        <button onClick={() => { setEditProduct(p); setImagePreview(''); setProductImages(p.images || []); setProductVideo(p.video || ''); setProductFeatures(p.features || []); setShowProductModal(true) }} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-gray-200">✏️</button>
                         <button onClick={() => deleteProduct(p.id)} className="px-2 py-1 bg-gray-100 rounded text-xs hover:bg-red-100 hover:text-red-600">🗑</button>
                       </td>
                     </tr>
@@ -826,13 +868,23 @@ export default function AdminClient() {
                   <p className="text-[10px] text-gray-400 mt-1">Upload one video to showcase the product.</p>
                 </div>
                 <textarea name="description" placeholder="Description" defaultValue={editProduct?.description || ''} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-16" />
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Features (one per line)</label>
+                  <textarea
+                    value={productFeatures.join('\n')}
+                    onChange={e => setProductFeatures(e.target.value.split('\n'))}
+                    placeholder={"e.g.\nPremium quality\n100% Natural"}
+                    className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary resize-none h-20"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <input name="rating" type="number" step="0.1" min="1" max="5" placeholder="Rating" defaultValue={editProduct?.rating || 4.5} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
                   <input name="quantity" type="number" min="0" placeholder="Stock Qty" defaultValue={editProduct?.quantity || 0} className="w-full px-4 py-2.5 border-2 rounded-lg outline-none focus:border-primary" />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={uploading} className="flex-1 btn-primary disabled:opacity-50">{uploading ? 'Uploading...' : 'Save Product'}</button>
-                  <button type="button" onClick={() => { setShowProductModal(false); setEditProduct(null); setProductImages([]) }} className="btn-secondary">Cancel</button>
+                  <button type="button" onClick={() => { setShowProductModal(false); setEditProduct(null); setProductImages([]); setProductFeatures([]) }} className="btn-secondary">Cancel</button>
                 </div>
               </form>
             </div>

@@ -139,6 +139,21 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
               </div>
             </div>
 
+            {/* Features */}
+            {product.features?.length > 0 && (
+              <div className="mt-5">
+                <h3 className="text-sm font-bold text-gray-700 mb-2">Features</h3>
+                <ul className="space-y-1.5">
+                  {product.features.map((f: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="text-green-500 mt-0.5">✓</span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Quantity + Buttons (Desktop) */}
             <div className="hidden md:block mt-6">
               <div className="flex items-center gap-4">
@@ -166,17 +181,17 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
 
             {/* Trust Badges */}
             <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t">
-              {[
-                ['🚚', 'Free Delivery', 'On orders above ₹999'],
-                ['🔄', 'Easy Returns', '7-day return policy'],
-                ['✅', '100% Authentic', 'Quality guaranteed'],
-                ['📦', 'Secure Packing', 'Freshness sealed'],
-              ].map(([icon, title, desc]) => (
-                <div key={title} className="flex items-start gap-2">
-                  <span className="text-lg">{icon}</span>
+              {(product.trust_badges?.length > 0 ? product.trust_badges : [
+                { icon: '🚚', title: 'Free Delivery', desc: 'On orders above ₹999' },
+                { icon: '🔄', title: 'Easy Returns', desc: '7-day return policy' },
+                { icon: '✅', title: '100% Authentic', desc: 'Quality guaranteed' },
+                { icon: '📦', title: 'Secure Packing', desc: 'Freshness sealed' },
+              ]).map((badge: any, i: number) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-lg">{badge.icon}</span>
                   <div>
-                    <p className="text-xs font-bold text-gray-800">{title}</p>
-                    <p className="text-[10px] text-gray-400">{desc}</p>
+                    <p className="text-xs font-bold text-gray-800">{badge.title}</p>
+                    <p className="text-[10px] text-gray-400">{badge.desc}</p>
                   </div>
                 </div>
               ))}
