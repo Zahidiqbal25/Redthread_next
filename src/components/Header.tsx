@@ -3,13 +3,14 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useStore } from '@/lib/store-context'
 
-export default function Header({ onSearch, onOpenAuth, onOpenProfile, onOpenOrders }: {
+export default function Header({ onSearch, onOpenAuth, onOpenProfile, onOpenOrders, onOpenWishlist }: {
   onSearch: (q: string) => void
   onOpenAuth: (mode: 'login' | 'register') => void
   onOpenProfile: () => void
   onOpenOrders: () => void
+  onOpenWishlist: () => void
 }) {
-  const { cart, user, logout } = useStore()
+  const { cart, wishlist, user, logout } = useStore()
   const [search, setSearch] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -53,6 +54,7 @@ export default function Header({ onSearch, onOpenAuth, onOpenProfile, onOpenOrde
               </button>
               {menuOpen && (
                 <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-xl min-w-[180px] overflow-hidden z-50">
+                  <button onClick={() => { onOpenWishlist(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">❤️ My Wishlist</button>
                   <button onClick={() => { onOpenOrders(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">📦 My Orders</button>
                   <button onClick={() => { onOpenProfile(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">⚙️ My Profile</button>
                   <button onClick={() => { logout(); setMenuOpen(false) }} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">🚪 Logout</button>
@@ -65,6 +67,12 @@ export default function Header({ onSearch, onOpenAuth, onOpenProfile, onOpenOrde
             🛒 <span className="hidden sm:inline">Cart</span>
             {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-accent text-primary-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>}
           </button>
+          {user && wishlist.length > 0 && (
+            <button onClick={onOpenWishlist} className="relative text-sm px-2 md:px-3 py-2 rounded-lg hover:bg-white/10">
+              ❤️
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{wishlist.length}</span>
+            </button>
+          )}
         </div>
       </div>
 

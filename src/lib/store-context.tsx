@@ -2,15 +2,19 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
 
 type CartItem = { id: number; name: string; price: number; image: string; weight: string; qty: number }
+type WishlistItem = { id: number; name: string; price: number; originalPrice: number; image: string; weight: string; category: string }
 type User = { id: number; name: string; email: string; phone: string; address: string; city: string; pincode: string } | null
 
 interface StoreContextType {
   cart: CartItem[]
+  wishlist: WishlistItem[]
   user: User
   addToCart: (product: any) => void
   updateQty: (id: number, delta: number) => void
   removeFromCart: (id: number) => void
   clearCart: () => void
+  toggleWishlist: (product: any) => void
+  isInWishlist: (id: number) => boolean
   setUser: (u: User) => void
   logout: () => void
   toast: string
@@ -28,6 +32,14 @@ function getInitialCart(): CartItem[] {
   } catch { return [] }
 }
 
+function getInitialWishlist(): WishlistItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const saved = localStorage.getItem('df_wishlist')
+    return saved ? JSON.parse(saved) : []
+  } catch { return [] }
+}
+
 function getInitialUser(): User {
   if (typeof window === 'undefined') return null
   try {
@@ -38,6 +50,7 @@ function getInitialUser(): User {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(getInitialCart)
+  const [wishlist, setWishlist] = useState<WishlistItem[]>(getInitialWishlist)
   const [user, setUserState] = useState<User>(getInitialUser)
   const [toast, setToast] = useState('')
   const onRequireAuthRef = useRef<(() => void) | null>(null)
@@ -51,6 +64,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('df_cart', JSON.stringify(cart))
   }, [cart])
+
+  // Save wishlist to localStorage
+  useEffect(() => {
+    localStorage.setItem('df_wishlist', JSON.stringify(wishlist))
+  }, [wishlist])
 
   const addToCart = useCallback((product: any) => {
     if (!userRef.current) {
@@ -79,6 +97,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const removeFromCart = (id: number) => setCart(prev => prev.filter(i => i.id !== id))
   const clearCart = () => setCart([])
 
+  const toggleWishlist = useCallback((product: any) => {
+    if (!userRef.current) {
+      if (onRequireAuthRef.current) onRequireAuthRef.current()
+      else { setToast('Please login to use wishlist'); setTimeout(() => setToast(''), 2500) }
+      return
+    }
+    setWishlist(prev => {
+      const exists = prev.find(i => i.id === product.id)
+      if (exists) {
+        setToast(`${product.name} removed from wishlist`)
+        setTimeout(() => setToast(''), 2500)
+        return prev.filter(i => i.id !== product.id)
+      }
+      setToast(`${product.name} added to wishlist! ❤️`)
+      setTimeout(() => setToast(''), 2500)
+      return [...prev, { id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, image: product.image, weight: product.weight, category: product.category }]
+    })
+  }, [])
+
+  const isInWishlist = useCallback((id: number) => wishlist.some(i => i.id === id), [wishlist])
+
   const setUser = (u: User) => {
     setUserState(u)
     userRef.current = u
@@ -86,7 +125,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem('df_user')
   }
 
-  const logout = () => { setUser(null); setCart([]); setToast('Logged out successfully'); setTimeout(() => setToast(''), 2500) }
+  const logout = () => { setUser(null); setCart([]); setWishlist([]); setToast('Logged out successfully'); setTimeout(() => setToast(''), 2500) }
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -96,7 +135,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setOnRequireAuth = (fn: () => void) => { onRequireAuthRef.current = fn }
 
   return (
-    <StoreContext.Provider value={{ cart, user, addToCart, updateQty, removeFromCart, clearCart, setUser, logout, toast, showToast, setOnRequireAuth }}>
+    <StoreContext.Provider value={{ cart, wishlist, user, addToCart, updateQty, removeFromCart, clearCart, toggleWishlist, isInWishlist, setUser, logout, toast, showToast, setOnRequireAuth }}>
       {children}
       {toast && <div className="toast show">{toast}</div>}
     </StoreContext.Provider>

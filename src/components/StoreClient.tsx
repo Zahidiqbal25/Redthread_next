@@ -10,6 +10,7 @@ import CheckoutModal from '@/components/CheckoutModal'
 import OrdersModal from '@/components/OrdersModal'
 import ProfileModal from '@/components/ProfileModal'
 import TrackOrderModal from '@/components/TrackOrderModal'
+import WishlistModal from '@/components/WishlistModal'
 
 function ResetPasswordModal({ token, onClose }: { token: string; onClose: () => void }) {
   const { showToast } = useStore()
@@ -99,6 +100,7 @@ function StoreContent({ initialProducts, initialCategories, trustBadges, infoCar
   const [ordersOpen, setOrdersOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [trackOpen, setTrackOpen] = useState(false)
+  const [wishlistOpen, setWishlistOpen] = useState(false)
   const [resetToken, setResetToken] = useState<string | null>(null)
   const [completeProfileOpen, setCompleteProfileOpen] = useState(false)
 
@@ -149,6 +151,7 @@ function StoreContent({ initialProducts, initialCategories, trustBadges, infoCar
         onOpenAuth={setAuthMode}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenOrders={() => setOrdersOpen(true)}
+        onOpenWishlist={() => setWishlistOpen(true)}
       />
       <CartSidebar onCheckout={() => setCheckoutOpen(true)} onLogin={() => setAuthMode('login')} />
 
@@ -212,6 +215,7 @@ function StoreContent({ initialProducts, initialCategories, trustBadges, infoCar
       {ordersOpen && <OrdersModal onClose={() => setOrdersOpen(false)} />}
       {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
       {trackOpen && <TrackOrderModal onClose={() => setTrackOpen(false)} />}
+      {wishlistOpen && <WishlistModal onClose={() => setWishlistOpen(false)} />}
       {resetToken && <ResetPasswordModal token={resetToken} onClose={() => { setResetToken(null); setAuthMode('login') }} />}
     </>
   )

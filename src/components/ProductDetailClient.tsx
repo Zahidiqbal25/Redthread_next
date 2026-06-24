@@ -8,7 +8,7 @@ import CheckoutModal from '@/components/CheckoutModal'
 import AuthModal from '@/components/AuthModal'
 
 function ProductDetail({ product, relatedProducts }: { product: any; relatedProducts: any[] }) {
-  const { addToCart, showToast, setOnRequireAuth } = useStore()
+  const { addToCart, showToast, setOnRequireAuth, toggleWishlist, isInWishlist } = useStore()
   const [qty, setQty] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
@@ -95,7 +95,12 @@ function ProductDetail({ product, relatedProducts }: { product: any; relatedProd
           {/* Product Info */}
           <div className="flex flex-col">
             <p className="text-xs md:text-sm text-primary font-bold uppercase tracking-wider">{product.category}</p>
-            <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">{product.name}</h1>
+            <div className="flex items-start justify-between gap-2 mt-2">
+              <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">{product.name}</h1>
+              <button onClick={() => toggleWishlist(product)} className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${isInWishlist(product.id) ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-400'}`}>
+                {isInWishlist(product.id) ? '❤️' : '🩶'}
+              </button>
+            </div>
 
             {/* Rating */}
             {product.rating && (

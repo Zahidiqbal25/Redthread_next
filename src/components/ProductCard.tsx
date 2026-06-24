@@ -3,14 +3,18 @@ import Link from 'next/link'
 import { useStore } from '@/lib/store-context'
 
 export default function ProductCard({ product }: { product: any }) {
-  const { addToCart } = useStore()
+  const { addToCart, toggleWishlist, isInWishlist } = useStore()
   const discount = Math.round((1 - product.price / product.originalPrice) * 100)
   const outOfStock = !product.inStock && product.quantity <= 0
+  const wishlisted = isInWishlist(product.id)
 
   return (
     <div className="bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100 hover:-translate-y-1.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 relative group">
       {discount > 0 && <span className="absolute top-2 left-2 md:top-3 md:left-3 bg-red-500 text-white px-2 py-0.5 md:px-2.5 md:py-1 rounded-md text-[10px] md:text-xs font-bold z-10 shadow">{discount}% OFF</span>}
       {outOfStock && <span className="absolute top-2 right-2 md:top-3 md:right-3 bg-gray-500 text-white px-2 py-0.5 md:px-2.5 md:py-1 rounded-md text-[10px] md:text-xs font-bold z-10">Out of Stock</span>}
+      <button onClick={() => toggleWishlist(product)} className={`absolute top-2 right-2 md:top-3 md:right-3 w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all ${wishlisted ? 'bg-red-50 text-red-500' : 'bg-white/80 text-gray-400 opacity-0 group-hover:opacity-100'} ${outOfStock ? 'top-10 md:top-12' : ''}`}>
+        {wishlisted ? '❤️' : '🩶'}
+      </button>
 
       <Link href={`/products/${product.id}`}>
         <div className="h-36 md:h-52 overflow-hidden relative bg-gray-50">
